@@ -3,10 +3,21 @@
 # Set the number of the starting directory and the number of directories to loop over
   Start_directory: 0
   Number_of_directories: 10
+
+
+
 # Analyses: set the needed analyses by toggling true/false:
-#
+
 # Basic:
 Multiplicity: false
-Yields: false
+
+# Yields:
+Yields: true
+Yields_proton_pT_min: 0.0
+Yields_lambda_pT_min: 0.0
+Yields_pi_pT_min: 0.0
+Yields_kaon_pT_min: 0.0
+Yields_pih_pT_min: 0.0
+
 # Flow:
 Flow_basic: false

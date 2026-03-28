@@ -12,6 +12,7 @@
 #include "./config.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
+#include "./yields.h"
 
 
 
@@ -95,7 +96,19 @@ int main () {
   ////////////////////////////////////////////////////////////////////////////////////////
   // Yields
   if ( cfg.yields ) {
-    std::cout << "Yields analysis" << std::endl;
+    if ( strcmp(SMASH_cfg_info.Modus(), "Collider") != 0) {
+      throw std::runtime_error("Data is not from a Collider modus \n"
+			       "Cannot run yields analysis!");
+    }
+
+    Yields yields_analysis(SMASH_cfg_info.Sqrtsnn(),
+			   ROOT_file->n_events(),
+			   // Get cuts from the config
+			   cfg.yields_proton_pT_min, cfg.yields_lambda_pT_min,
+			   cfg.yields_pi_pT_min, cfg.yields_kaon_pT_min,
+			   cfg.yields_phi_pT_min);
+    
+    yields_analysis.get_dN_dy(ROOT_file, SMASH_cfg_info);
     any_analysis_performed = true;
   }
 
