@@ -1,0 +1,32 @@
+# Ignore these files and types of files when updating the repo
+
+# ignore build directories
+build/
+*/build/
+
+# ignore compiled objects
+*.o
+
+# CMake build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# ignore binaries and executables
+*.o
+*.so
+*.a
+*.out
+SMASH_ROOT_Analysis
+
+# ignore ROOT output files
+*.root
+
+# ignore logs
+*.log
+
+# ignore macOS junk
+.DS_Store
+

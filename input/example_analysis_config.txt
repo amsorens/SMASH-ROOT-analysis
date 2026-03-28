@@ -1,0 +1,12 @@
+# Directories:
+#
+# Set the number of the starting directory and the number of directories to loop over
+  Start_directory: 0
+  Number_of_directories: 10
+# Analyses: set the needed analyses by toggling true/false:
+#
+# Basic:
+Multiplicity: false
+Yields: false
+# Flow:
+Flow_basic: false
