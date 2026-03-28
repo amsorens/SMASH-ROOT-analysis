@@ -51,7 +51,7 @@ const size_t Char_Array_Size = 256;
 // limit of 5,000,000. For other applications, where the number of particles per entry is
 // even larger, the code will crash with an error message advising the user to increase
 // Max_Particles.
-const Int_t Max_Particles = 5000000;
+const int Max_Particles = 5000000;
 
 
 

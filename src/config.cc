@@ -75,6 +75,8 @@ void Config::load(const std::string& config_filename) {
 
   auto cfg = read_key_value_file(config_filename);
 
+  ///////////////////////////////////////////
+  // Directories
   if (cfg.count("Start_directory")) {
     start_directory = std::stoi(cfg["Start_directory"]);
   }
@@ -83,14 +85,35 @@ void Config::load(const std::string& config_filename) {
     number_of_directories = std::stoi(cfg["Number_of_directories"]);
   }
 
+  ///////////////////////////////////////////
+  // Multiplicity
   if (cfg.count("Multiplicity")) {
     multiplicity = to_bool(cfg["Multiplicity"]);
   }
 
+  ///////////////////////////////////////////
+  // Yields
   if (cfg.count("Yields")) {
     yields = to_bool(cfg["Yields"]);
   }
+  if (cfg.count("Yields_proton_pT_min")) {
+    yields_proton_pT_min = std::stod(cfg["Yields_proton_pT_min"]);
+  }
+  if (cfg.count("Yields_lambda_pT_min")) {
+    yields_lambda_pT_min = std::stod(cfg["Yields_lambda_pT_min"]);
+  }
+  if (cfg.count("Yields_pi_pT_min")) {
+    yields_pi_pT_min = std::stod(cfg["Yields_pi_pT_min"]);
+  }
+  if (cfg.count("Yields_kaon_pT_min")) {
+    yields_kaon_pT_min = std::stod(cfg["Yields_kaon_pT_min"]);
+  }
+  if (cfg.count("Yields_phi_pT_min")) {
+    yields_phi_pT_min = std::stod(cfg["Yields_phi_pT_min"]);
+  }
 
+  ///////////////////////////////////////////
+  // Flow
   if (cfg.count("Flow_basic")) {
     flow_basic = to_bool(cfg["Flow_basic"]);
   }

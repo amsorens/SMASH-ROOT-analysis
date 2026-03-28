@@ -12,17 +12,29 @@
 
 #include <string>
 
+#include "./constants.h"
+
 
 
 struct Config {
-  // Directories
+  // Directories:
   int start_directory = 0;
   int number_of_directories = 10;
 
-  // Analyses
+  // Analyses:
+  // Multiplicity
   bool multiplicity = false;
-  bool yields = false;
 
+  // Yields
+  bool yields = false;
+  // Assume no low pT cut
+  double yields_proton_pT_min = PT_Baryon_Yield_Min;
+  double yields_lambda_pT_min = PT_Baryon_Yield_Min;
+  double yields_pi_pT_min = PT_Meson_Yield_Min;
+  double yields_kaon_pT_min = PT_Meson_Yield_Min;
+  double yields_phi_pT_min = PT_Meson_Yield_Min;
+
+  // Flow
   bool flow_basic = false;
 
   // Read from file

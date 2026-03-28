@@ -34,8 +34,10 @@ set(SRC_FILES
 
 ./src/basic_functions.cc
 ./src/config.cc
+./src/plots.cc
 ./src/read_Particles.cc
 ./src/SMASH_config_info.cc
+./src/yields.cc
 )
 
 # Add header files
@@ -43,8 +45,10 @@ set(HEADER_FILES
 ./src/basic_functions.h
 ./src/config.h
 ./src/constants.h
+./src/plots.h
 ./src/read_Particles.h
 ./src/SMASH_config_info.h
+./src/yields.h
 )
 
 # Create the executable
