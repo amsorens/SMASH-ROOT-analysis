@@ -10,6 +10,8 @@
 #include <sstream>  // for std::ostringstream
 
 #include "./config.h"
+#include "./constants.h"
+#include "./multiplicity.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
 #include "./yields.h"
@@ -17,14 +19,23 @@
 
 
 int main () {
-  std::cout << "\n\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
+  std::cout << color::BLUE
+	    << "\n\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
 	    << "\n:                                                     :"
 	    << "\n: Welcome to Agnieszka's SMASH ROOT analysis code!    :"
 	    << "\n:                                                     :"
 	    << "\n: Copyright (c) 2026 Agnieszka Sorensen               :"
 	    << "\n:                                                     :"
 	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..\n\n"
+	    << color::RESET
 	    << std::endl;
+
+  ///////////////////////////////////////////
+  // Establish what level of verbose statements from ROOT we want
+  gErrorIgnoreLevel = kWarning;
+  note_msg(std::string("The ROOT warning level used is ") +
+	   error_level_to_string(gErrorIgnoreLevel));
+  std::cout << std::endl;
 
   
     
@@ -35,13 +46,17 @@ int main () {
 
   
   ////////////////////////////////////////////////////////////////////////////////////////
+  // Setup the analysis calculation
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////////////////
   // Read in the config file
   Config cfg;
   cfg.load("./analysis_config.txt");
 
+  
 
-
-  ////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////
   // Initialize a ReadParticles object with the Start_directory and Number_of_directories
   // to attach as specified in the config file.
   // Note: A (unique) pointer is used as the size of the ReadParticles object is expected
@@ -51,10 +66,10 @@ int main () {
 
   // Measure the time it takes to initialize
   auto t_init = std::chrono::high_resolution_clock::now();
+
   
 
-
-  ////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////
   // Get the properties of the ROOT file and SMASH config info
   ROOT_file->get_properties();
 
@@ -86,13 +101,33 @@ int main () {
     any_analysis_performed = true;
   }
 
+
+  
   ////////////////////////////////////////////////////////////////////////////////////////
   // Multiplicity
   if ( cfg.multiplicity ) {
-    std::cout << "Multiplicity analysis" << std::endl;
-    any_analysis_performed = true;
+    if ( strcmp(SMASH_cfg_info.Modus(), "Collider") != 0) {
+      throw std::runtime_error("Data is not from a Collider modus \n"
+			       "Cannot run multiplicity analysis!");
+    }
+
+    Multiplicity multiplicity_analysis(SMASH_cfg_info.Sqrtsnn(),
+				       ROOT_file->n_events(),
+				       // Get cuts from the config
+				       cfg.multiplicity_excluded_species,
+				       cfg.centrality_class_edges,
+				       cfg.multiplicity_FXT_frame,
+				       cfg.multiplicity_eta_min,
+				       cfg.multiplicity_eta_max,
+				       cfg.multiplicity_pT_min,
+				       cfg.multiplicity_pT_max);
+    
+    multiplicity_analysis.multiplicity_and_centrality(ROOT_file, SMASH_cfg_info);
+    any_analysis_performed = true;    
   }
 
+
+  
   ////////////////////////////////////////////////////////////////////////////////////////
   // Yields
   if ( cfg.yields ) {
@@ -115,6 +150,10 @@ int main () {
 
 
   ////////////////////////////////////////////////////////////////////////////////////////
+  // Finish the run
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////////////////
   // Check whether any analyses or tests have been perfomed
   if ( !any_analysis_performed ) {
     if ( !any_tests_performed ) {
