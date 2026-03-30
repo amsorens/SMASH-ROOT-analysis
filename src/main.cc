@@ -143,7 +143,7 @@ int main () {
 			   cfg.yields_pi_pT_min, cfg.yields_kaon_pT_min,
 			   cfg.yields_phi_pT_min);
     
-    yields_analysis.get_dN_dy(ROOT_file, SMASH_cfg_info);
+    yields_analysis.get_dN_dy(ROOT_file, SMASH_cfg_info, cfg);
     any_analysis_performed = true;
   }
 

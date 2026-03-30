@@ -30,13 +30,29 @@
 
 void Yields::plot_and_save_1D_histogram_wrapper
   (TH1D* h1, const char* x_axis_label, const char* y_axis_label,
-     const char* plot_option)
+   const char* plot_option, const bool put_plots_in_separate_directory)
 {
+  // If put_plots_in_separate_directory is true, then make sure the directory exists
+  if (put_plots_in_separate_directory) {
+    // Full path: Target_Directory + directory name
+    std::filesystem::path folder_path =
+      std::filesystem::path(Target_Directory) / yields_directory_name_;
+
+    std::error_code ec;
+    std::filesystem::create_directories(folder_path, ec);
+    if (ec) {
+      std::cerr << "Warning: could not create directory "
+		<< folder_path.string() << ": " << ec.message() << "\n";
+    }
+  }
+  
   // Get the name for the plot and files (log and not log)
   char basic_file_name_h1[Char_Array_Size];
   snprintf(basic_file_name_h1, Char_Array_Size,
-	   "%s%s_nEvents=%d",
-	   Target_Directory, h1->GetName(), N_events_);
+	   "%s%s%s_nEvents=%d",
+	   Target_Directory,
+	   put_plots_in_separate_directory ? yields_directory_name_ : "",
+	   h1->GetName(), N_events_);
   char file_name_h1_log[Char_Array_Size];
   snprintf(file_name_h1_log, Char_Array_Size,
 	   "%s_log_plot",
@@ -53,7 +69,8 @@ void Yields::plot_and_save_1D_histogram_wrapper
 
 
 void Yields::get_dN_dy
-  (const std::unique_ptr<ReadParticles>& ROOT_file, SMASHConfigInfo& config_info)
+  (const std::unique_ptr<ReadParticles>& ROOT_file, SMASHConfigInfo& config_info,
+   const Config cfg)
 {
   ////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -63,31 +80,29 @@ void Yields::get_dN_dy
   ////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////
 
-  std::cout << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
+  std::cout << color::BLUE
+	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
 	    << "\n: Starting yields analysis                            :"
-	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..\n" << std::endl;
+	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..\n"
+	    << color::RESET << std::endl;
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // Establish dN/dy distribution for chosen particle species
   
-  // Get the number of entries
-  const Long64_t n_entries = ROOT_file->fChain->GetEntries();
-
   ///////////////////////////////////////////
-  // Loop over all used entries
-
+  // Loop over all entries
   const int progress_message_threshold = 100;
   std::cout << "Print progress message every "
 	    << progress_message_threshold << " entries:" << std::endl;
 
-  // variables for a manual check
+  // Declare variables for a manual check
   int n_protons_0point1{};
   int n_protons_0point2{};
   int n_protons_0point3{};
   int n_protons_0point4{};
   int n_protons_0point5{};
 
-  for (int i_tree_entry = 0; i_tree_entry < n_entries; i_tree_entry++) { /// loop A1
+  for (int i_tree_entry = 0; i_tree_entry < ROOT_file->n_entries(); i_tree_entry++) {
     // Print out a message every X entries
     if ( (i_tree_entry % progress_message_threshold) == 0 ) {
       std::cout << "Yields analysis: loading i_tree_entry = "
@@ -111,7 +126,7 @@ void Yields::get_dN_dy
     
     /////////////////////////////////////////
     // Loop over all particles in the entry
-    for (int index = 0; index < ROOT_file->npart; index++) { /// loop A2
+    for (int index = 0; index < ROOT_file->npart; index++) {
       
       ///////////////////////////////////////
       // protons
@@ -247,11 +262,11 @@ void Yields::get_dN_dy
 	}
       }
 
-    } // for (int index = 0; index < npart; index++) { /// loop A2
+    } // for (int index = 0; index < npart; index++) {
 
-  } // for (int i_tree_entry = 0; i_tree_entry < n_entries; i_tree_entry++) { /// loop A1
+  } // for (int i_tree_entry = 0; i_tree_entry < ROOT_file->n_entries(); i_tree_entry++) {
 
-  std::cout << "\n\nFinished filling yield histograms \n\n" << std::endl;
+  std::cout << "\n\nFinished filling yields histograms \n\n" << std::endl;
 
 
   
@@ -269,27 +284,33 @@ void Yields::get_dN_dy
   h_kaon_plus_dN_dy_.Scale(1.0/real_event_equivalent);
   h_kaon_minus_dN_dy_.Scale(1.0/real_event_equivalent);
   h_phi_dN_dy_.Scale(1.0/real_event_equivalent);
+  // Do the same with the manual check variables
+  const double n_protons_0point1_per_event =
+    static_cast<double>(n_protons_0point1) / (1.0 * real_event_equivalent);
+  const double n_protons_0point2_per_event =
+    static_cast<double>(n_protons_0point2) / (1.0 * real_event_equivalent);
+  const double n_protons_0point3_per_event =
+    static_cast<double>(n_protons_0point3) / (1.0 * real_event_equivalent);
+  const double n_protons_0point4_per_event =
+    static_cast<double>(n_protons_0point4) / (1.0 * real_event_equivalent);
+  const double n_protons_0point5_per_event =
+    static_cast<double>(n_protons_0point5) / (1.0 * real_event_equivalent);
 
-
-
-  // Print out the values from the manual check
-  std::cout << "\n\n\nProton yields:"
-	    << "\n|y| < 0.1: "
-	    << static_cast<double>(n_protons_0point1) / (1.0 * real_event_equivalent)
-	    << "\n|y| < 0.2: "
-	    << static_cast<double>(n_protons_0point2) / (1.0 * real_event_equivalent)
-	    << "\n|y| < 0.3: "
-	    << static_cast<double>(n_protons_0point3) / (1.0 * real_event_equivalent)
-	    << "\n|y| < 0.4: "
-	    << static_cast<double>(n_protons_0point4) / (1.0 * real_event_equivalent)
-	    << "\n|y| < 0.5: "
-	    << static_cast<double>(n_protons_0point5) / (1.0 * real_event_equivalent)
-	    << "\n\n" << std::endl;
+  if (cfg.verbose) {
+    // Print out the values from the manual check
+    std::cout << "Proton yields:"
+	      << "\n|y| < 0.1: " << n_protons_0point1_per_event
+	      << "\n|y| < 0.2: " << n_protons_0point2_per_event
+	      << "\n|y| < 0.3: " << n_protons_0point3_per_event
+	      << "\n|y| < 0.4: " << n_protons_0point4_per_event
+	      << "\n|y| < 0.5: " << n_protons_0point5_per_event
+	      << std::endl;
+  }
   
   
 
   ////////////////////////////////////////////////////////////////////////////////////////
-  // Extract and save particle yields for various midrapidty bin widths
+  // Extract particle yields for various midrapidty bin widths
 
   // Store the yields in vectors
   std::vector<double> rapidity_bin_widths =
@@ -321,16 +342,16 @@ void Yields::get_dN_dy
   
   // histogram bin indexes start at 1
   for (int i = 1; i < (n_of_h_bins_ + 1); i++) {
-    // this is common to all dN/dy histograms by construction
+    // This is common to all dN/dy histograms by construction
     const double bin_center = h_proton_dN_dy_.GetBinCenter(i);
 
     // Loop over all rapidity cuts; we loop in reverse order to be able to break when
     // the rapidity bin center first does not fulfill the condition
     for (int j = (n_of_rapidity_bin_widths - 1); j >= 0 ; j--) {
-      // Based on the known bin structure, with centers at +-0.05, +-0.015, etc., we can
+      // Based on the known bin structure, with centers at +-0.05, +-0.15, etc., we can
       // easily apply the cuts
       if ( std::abs(bin_center) < rapidity_bin_widths[j] ) {
-	// add bin content and error in quadrature
+	// Add bin content and error in quadrature
 	N_proton[j] += h_proton_dN_dy_.GetBinContent(i);
 	N_proton_error[j] += std::pow(h_proton_dN_dy_.GetBinError(i), 2.0);
 	
@@ -364,7 +385,7 @@ void Yields::get_dN_dy
     }
   }
 
-  // Get actual arrors by taking a square root of the errors vectors contents
+  // Get actual errors by taking a square root of the errors vectors contents
   for (int i = 0; i < n_of_rapidity_bin_widths; i++) {
     N_proton_error[i] = std::sqrt( N_proton_error[i] );
     N_antiproton_error[i] = std::sqrt( N_antiproton_error[i] );
@@ -376,24 +397,61 @@ void Yields::get_dN_dy
     N_kaon_minus_error[i] = std::sqrt( N_kaon_minus_error[i] );
     N_phi_error[i] = std::sqrt( N_phi_error[i] );
   }
+
+
+
+  ///////////////////////////////////////////
+  // Sanity checks
+  std::vector<double> n_protons_0pointX_per_event = {n_protons_0point1_per_event,
+    n_protons_0point2_per_event, n_protons_0point3_per_event,
+    n_protons_0point4_per_event, n_protons_0point5_per_event};
+  const double epsilon = 1e-9;
+  for (int i = 0; i < 5; i++) {
+    if ( std::abs(N_proton[i] - n_protons_0pointX_per_event[i]) > epsilon ) {
+      std::ostringstream oss;
+      oss << "Fatal error: N_proton[" << i << "] = " << N_proton[i] << ", "
+	  << "n_protons_0point" << i << "_per_event = " << n_protons_0pointX_per_event[i]
+	  << ".\nThese should be equal (tested precision: " << epsilon << ").";
+      throw std::runtime_error(oss.str());
+    }
+  }
   
 
-  // Print out the values
-  std::cout << "\n\n\nYields:" << std::endl;
-  for (int i = 0; i < n_of_rapidity_bin_widths; i++) {
-    printf("|y| < %2.1f:   N(p) = %8.4f+-%8.4f   N(p\u0305) = %8.4f+-%8.4f   "
-	   "N(Λ) = %8.4f+-%8.4f   N(Λ\u0305) = %8.4f+-%8.4f   N(π+) = %8.4f+-%8.4f   \n"
-	   "\t    N(π-) = %8.4f+-%8.4f   N(K+) = %8.4f+-%8.4f   N(K-) = %8.4f+-%8.4f   "
-	   "N(φ) = %8.4f+-%8.4f\n",
-	   rapidity_bin_widths[i],
-	   N_proton[i], N_proton_error[i], N_antiproton[i], N_antiproton_error[i],
-	   N_lambda[i], N_lambda_error[i], N_antilambda[i], N_antilambda_error[i],
-	   N_pi_plus[i], N_pi_plus_error[i], N_pi_minus[i], N_pi_minus_error[i],
-	   N_kaon_plus[i], N_kaon_plus_error[i], N_kaon_minus[i], N_kaon_minus_error[i],
-	   N_phi[i], N_phi_error[i]);     
-  }
-  std::cout << "\n\n" << std::endl;
 
+  
+  
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Save data
+  std::cout << color::BLUE
+	    << "\n\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
+	    << "\n: Saving yields data                                  :"
+	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
+	    << color::RESET << std::endl;
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+  if (cfg.verbose) {
+    // Print out the values
+    std::cout << "\nYields:" << std::endl;
+    for (int i = 0; i < n_of_rapidity_bin_widths; i++) {
+      printf("|y| < %2.1f:   N(p) = %8.4f+-%8.4f   N(p\u0305) = %8.4f+-%8.4f   "
+	     "N(Λ) = %8.4f+-%8.4f   N(Λ\u0305) = %8.4f+-%8.4f   N(π+) = %8.4f+-%8.4f   \n"
+	     "\t    N(π-) = %8.4f+-%8.4f   N(K+) = %8.4f+-%8.4f   N(K-) = %8.4f+-%8.4f   "
+	     "N(φ) = %8.4f+-%8.4f\n",
+	     rapidity_bin_widths[i],
+	     N_proton[i], N_proton_error[i], N_antiproton[i], N_antiproton_error[i],
+	     N_lambda[i], N_lambda_error[i], N_antilambda[i], N_antilambda_error[i],
+	     N_pi_plus[i], N_pi_plus_error[i], N_pi_minus[i], N_pi_minus_error[i],
+	     N_kaon_plus[i], N_kaon_plus_error[i], N_kaon_minus[i], N_kaon_minus_error[i],
+	     N_phi[i], N_phi_error[i]);     
+    }
+    std::cout << "\n" << std::endl;
+  }
+
+
+  
   ///////////////////////////////////////////
   // Save yields to a file
 
@@ -418,22 +476,11 @@ void Yields::get_dN_dy
 		 proton_pT_min_, lambda_pT_min_, pi_pT_min_, kaon_pT_min_, phi_pT_min_);
     // Mark which rapidity bin width
     std::fprintf(Yields_data[i], "# |y| < %2.1f:\n#\n", rapidity_bin_widths[i]);
-    // Explain the error bars
-    /*
-    std::fprintf(Yields_data[i],
-		 "# The (statistical) errors are artificially inflated by adding (in "
-		 "quadrature) an artificial systematic error of 10%%; this is to avoid "
-		 "absurd values of chi^2/d.o.f. in thermal model fits of simulation "
-		 "yields which have very small error bars. To preserve the information "
-		 "about the real values of errors, they are given in the commented out "
-		 "lines preceding uncommented lines with total (stat + artificial syst) "
-		 "errors to be used.\n#\n");
-    */
     // Add column labels
     std::fprintf(Yields_data[i],
 		 "#fit?   pdg1    pdg2   fdd1n   fddn2    value       error\n#\n");
 
-    // Do not ask to fit partickes whose yields are zero
+    // Do not ask to fit particles whose yields are zero
     const int fit_proton = std::abs(N_proton[i]) > 0 ? 1 : 0;
     const int fit_antiproton = std::abs(N_antiproton[i]) > 0 ? 1 : 0;
     const int fit_lambda = std::abs(N_lambda[i]) > 0 ? 1 : 0;
@@ -446,53 +493,24 @@ void Yields::get_dN_dy
       
     // Particle yields for that bin width
     std::fprintf(Yields_data[i],
-		 //"#%d     2212    0      1       0       %8.4f   %8.4f\n"
 		 "%d      2212    0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     -2212   0      1       0       %8.4f   %8.4f\n"
 		 "%d      -2212   0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     3122    0      1       0       %8.4f   %8.4f\n"
 		 "%d      3122    0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     -3122   0      1       0       %8.4f   %8.4f\n"
 		 "%d      -3122   0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     211     0      1       0       %8.4f   %8.4f\n"
 		 "%d      211     0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     -211    0      1       0       %8.4f   %8.4f\n"
 		 "%d      -211    0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     321     0      1       0       %8.4f   %8.4f\n"
 		 "%d      321     0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     -321    0      1       0       %8.4f   %8.4f\n"
 		 "%d      -321    0      1       0       %8.4f   %8.4f\n"
-		 //"#%d     333     0      1       0       %8.4f   %8.4f\n"
 		 "%d      333     0      1       0       %8.4f   %8.4f\n",
 		 fit_proton, N_proton[i], N_proton_error[i],
-		 //fit_proton, N_proton[i], std::sqrt( std::pow(N_proton_error[i], 2)
-		//				     + std::pow(0.1 * N_proton[i], 2) ),
 		 fit_antiproton, N_antiproton[i], N_antiproton_error[i],
-		 //fit_antiproton, N_antiproton[i], std::sqrt( std::pow(N_antiproton_error[i], 2)
-		//					     + std::pow(0.1 * N_antiproton[i], 2) ),
 		 fit_lambda, N_lambda[i], N_lambda_error[i],
-		 //fit_lambda, N_lambda[i], std::sqrt( std::pow(N_lambda_error[i], 2)
-	//					     + std::pow(0.1 * N_lambda[i], 2) ),
 		 fit_antilambda, N_antilambda[i], N_antilambda_error[i],
-	//	 fit_antilambda, N_antilambda[i], std::sqrt( std::pow(N_antilambda_error[i], 2)
-	//						     + std::pow(0.1 * N_antilambda[i], 2) ),
 		 fit_pi_plus, N_pi_plus[i], N_pi_plus_error[i],
-	//	 fit_pi_plus, N_pi_plus[i], std::sqrt( std::pow(N_pi_plus_error[i], 2)
-	//					       + std::pow(0.1 * N_pi_plus[i], 2) ),
 		 fit_pi_minus, N_pi_minus[i], N_pi_minus_error[i],
-	//	 fit_pi_minus, N_pi_minus[i], std::sqrt( std::pow(N_pi_minus_error[i], 2)
-	//						 + std::pow(0.1 * N_pi_minus[i], 2) ),
 		 fit_kaon_plus, N_kaon_plus[i], N_kaon_plus_error[i],
-	//	 fit_kaon_plus, N_kaon_plus[i], std::sqrt( std::pow(N_kaon_plus_error[i], 2)
-	//						   + std::pow(0.1 * N_kaon_plus[i], 2) ),
 		 fit_kaon_minus, N_kaon_minus[i],N_kaon_minus_error[i],
-	//	 fit_kaon_minus, N_kaon_minus[i], std::sqrt( std::pow(N_kaon_minus_error[i], 2)
-	//						     + std::pow(0.1 * N_kaon_minus[i], 2) ),
-		 fit_phi, N_phi[i], N_phi_error[i]
-		 //,
-	//	 fit_phi, N_phi[i], std::sqrt( std::pow(N_phi_error[i], 2)
-	//			      + std::pow(0.1 * N_phi[i], 2) )
-		 );
+		 fit_phi, N_phi[i], N_phi_error[i] );
     std::fprintf(Yields_data[i], "#\n#\n");
 
     fclose(Yields_data[i]);
@@ -535,12 +553,18 @@ void Yields::get_dN_dy
   plot_and_save_1D_histogram_wrapper(&h_phi_dN_dy_,
 				     "rapidity y", "dN_{#phi}/dy", "h");
 
+
   
   ////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "\n\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
+  ////////////////////////////////////////////////////////////////////////////////////////
+  std::cout << color::BLUE
+	    << "\n\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .."
 	    << "\n: Finished yields analysis                            :"
-	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..\n\n" << std::endl;
-   
+	    << "\n .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..\n\n"
+	    << color::RESET << std::endl;
+  ////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  
 }
 
 

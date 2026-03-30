@@ -151,7 +151,7 @@ class Multiplicity {
   ////////////////////////////////////////////////////////////////////////////////////////
   // Handling data:
   // name of optional directory to store some of the results in
-  const char multiplicty_directory_name_[Char_Array_Size] = "multiplicity_plots/";
+  const char multiplicity_directory_name_[Char_Array_Size] = "multiplicity_plots/";
 };
 
 

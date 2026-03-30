@@ -18,7 +18,7 @@ Flow_basic: false
 
 
 # Multiplicity:
-Multiplicity: true
+Multiplicity: false
 Multiplicity_excluded_species: 2212, -2212, 1000010020   # p, pbar, d
 #Centrality_class_edges: 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00    # very specific to CBW-corrected cumulant analysis
 Multiplicity_FXT_frame: false
@@ -26,7 +26,7 @@ Multiplicity_default_cuts: true
 
 
 # Yields:
-Yields: false
+Yields: true
 # Provide values if different from default values in config.h
 Yields_proton_pT_min: 0.0
 Yields_lambda_pT_min: 0.0
