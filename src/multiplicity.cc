@@ -54,7 +54,7 @@ void Multiplicity::plot_and_save_1D_histogram_wrapper
   if (put_plots_in_separate_directory) {
     // Full path: Target_Directory + directory name
     std::filesystem::path folder_path =
-      std::filesystem::path(Target_Directory) / multiplicty_directory_name_;
+      std::filesystem::path(Target_Directory) / multiplicity_directory_name_;
 
     std::error_code ec;
     std::filesystem::create_directories(folder_path, ec);
@@ -70,7 +70,7 @@ void Multiplicity::plot_and_save_1D_histogram_wrapper
 	   "%s%s%s%s_"
 	   "etamin=%3.2f_etamax=%3.2f_pTmin=%3.2f_pTmax=%3.2f_nEventsNonempty=%d",
 	   Target_Directory,
-	   put_plots_in_separate_directory ? multiplicty_directory_name_ : "",
+	   put_plots_in_separate_directory ? multiplicity_directory_name_ : "",
 	   h1->GetName(), FXT_frame_ ? "_FXT_frame" : "",
 	   eta_.min(), eta_.max(), pT_.min(), pT_.max(), N_events_nonempty_);
   char file_name_h1_log[Char_Array_Size];
@@ -102,7 +102,7 @@ void Multiplicity::plot_and_save_2D_histogram_wrapper
   if (put_plots_in_separate_directory) {
     // Full path: Target_Directory + directory name
     std::filesystem::path folder_path =
-      std::filesystem::path(Target_Directory) / multiplicty_directory_name_;
+      std::filesystem::path(Target_Directory) / multiplicity_directory_name_;
 
     std::error_code ec;
     std::filesystem::create_directories(folder_path, ec);
@@ -118,7 +118,7 @@ void Multiplicity::plot_and_save_2D_histogram_wrapper
 	   "%s%s%s%s_"
 	   "etamin=%3.2f_etamax=%3.2f_pTmin=%3.2f_pTmax=%3.2f_nEventsNonempty=%d",
 	   Target_Directory,
-	   put_plots_in_separate_directory ? multiplicty_directory_name_ : "",
+	   put_plots_in_separate_directory ? multiplicity_directory_name_ : "",
 	   h2.GetName(), FXT_frame_ ? "_FXT_frame" : "",
 	   eta_.min(), eta_.max(), pT_.min(), pT_.max(), N_events_nonempty_);
   char file_name_h2_log[Char_Array_Size];

@@ -20,6 +20,7 @@
 #include <TProfile.h>
 
 #include "./basic_functions.h"
+#include "./config.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
 
@@ -47,8 +48,9 @@ public:
       y_range_max_( static_cast<int>(std::ceil(15 * y_beam_)) / 10.0 ),
       // The number of bins for each dN/dy histogram is established such that the
       // histograms, constructed to range from -y_range_max_ to y_range_max_, will all
-      // have bins of width 0.1 (hardcoded as y_bin_width_)
-      n_of_h_bins_( 2.0 * y_range_max_ / y_bin_width_ ),
+      // have bins of width 0.1 (hardcoded as y_bin_width_); we use std::round (rounding
+      // to the nearest integer) to avoid floating point artifacts.
+      n_of_h_bins_( static_cast<int>(std::round(2.0 * y_range_max_ / y_bin_width_)) ),
       N_events_(N_events),
       ///////////////////////////////////////
       // Cuts:
@@ -76,13 +78,7 @@ public:
 			  n_of_h_bins_, -y_range_max_, y_range_max_),
       h_phi_dN_dy_("h_phi_dN_dy", "#phi dN/dy",
 		   n_of_h_bins_, -y_range_max_, y_range_max_){
-    //////////////////////////////////////////////////////////////////////////////////////
-    // Show the histogram ranges
-    std::cout << "\n      y_beam_ = " << y_beam_
-	      << "\n y_bin width_ = " << y_bin_width_
-	      << "\n y_range_max_ = " << y_range_max_
-	      << "\n n_of_h_bins_ = " << n_of_h_bins_
-	      << std::endl;
+    // nothing to do here
   }
 
   // Default destructor
@@ -96,10 +92,11 @@ public:
 
   void plot_and_save_1D_histogram_wrapper
     (TH1D* h1, const char* x_axis_label, const char* y_axis_label,
-     const char* plot_option);
+     const char* plot_option, const bool put_plots_in_separate_directory = true);
   
   void get_dN_dy
-    (const std::unique_ptr<ReadParticles>& ROOT_file, SMASHConfigInfo& config_info);
+    (const std::unique_ptr<ReadParticles>& ROOT_file, SMASHConfigInfo& config_info,
+     const Config cfg);
 
   
   
@@ -151,6 +148,10 @@ private:
   TH1D h_kaon_plus_dN_dy_{};
   TH1D h_kaon_minus_dN_dy_{};
   TH1D h_phi_dN_dy_{};
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Handling data:
+  // name of optional directory to store some of the results in
+  const char yields_directory_name_[Char_Array_Size] = "yields_plots/";
 };
 
 #endif
