@@ -15,8 +15,8 @@
 #include <TChain.h>
 #include <TFile.h>
 
+#include "./config.h"
 #include "./constants.h"
-
 
 
 
@@ -108,8 +108,7 @@ class ReadParticles {
   ReadParticles();
 
   // Alternative constructor 1
- ReadParticles(int folder_min,
-	       int no_of_directories);
+ ReadParticles(Config cfg);
 
   // Alternative constructor 2
   ReadParticles(std::string ROOT_file_address);
@@ -130,7 +129,7 @@ class ReadParticles {
   //
   //
   //
-  virtual void get_properties();
+  virtual void get_properties(Config cfg);
 
   
 
@@ -168,7 +167,7 @@ class ReadParticles {
   // whenever the underlying data (number of files, file order, file content) changes
   size_t compute_chain_hash() const;
   // Method to load the metadata (if valid)
-  bool load_metadata_if_valid(size_t hash);
+  bool load_metadata_if_valid(size_t hash, Config cfg);
   // Method to save the metadata
   void write_metadata(size_t hash) const;
   // Metadata file path and name:

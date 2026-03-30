@@ -195,7 +195,7 @@ std::vector<double> read_in_a_vector(std::string line_from_the_file,
 
 
 
-void SMASHConfigInfo::read_SMASH_config(int starting_folder_number) {
+void SMASHConfigInfo::read_SMASH_config(Config cfg) {
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // Define auxiliary variables that will hold chosen values read from the config file
@@ -237,7 +237,7 @@ void SMASHConfigInfo::read_SMASH_config(int starting_folder_number) {
   std::string config_file_address(Target_Directory);
   config_file_address += "../data/";
   std::stringstream folder_no;
-  folder_no << starting_folder_number;
+  folder_no << cfg.start_directory;
   config_file_address += folder_no.str();
   config_file_address += "/config.yaml";
   //std::cout << "\n\nThe file to read in is \n" << config_file_address << std::endl;
@@ -523,32 +523,36 @@ void SMASHConfigInfo::read_SMASH_config(int starting_folder_number) {
     }
   }
 
-  std::cout << "\n\n*****************************************************************"
-	    << "\n*****************************************************************"
-	    << "\nInformation from the config file:"
-	    << "\n                       Modus_ = " << Modus_
-	    << "\n                    End_Time_ = " << End_Time_
-	    << "\n                     Nevents_ = " << Nevents_
-	    << "\n                   Ensembles_ = " << Ensembles_
-	    << "\n               Testparticles_ = " << Testparticles_
-	    << "\n            Triangular_Range_ = " << Triangular_Range_
-	    << "\n              Gaussian_Sigma_ = " << Gaussian_Sigma_
-	    << "\n"
-	    << "\n                      Length_ = " << Length_
-	    << "\n                 Temperature_ = " << Temperature_
-	    << "\n          number_of_neutrons_ = " << number_of_neutrons_
-	    << "\n           number_of_protons_ = " << number_of_protons_
-	    << "\n"
-	    << "\n                     Sqrtsnn_ = " << Sqrtsnn_
-	    << "\n                       E_Kin_ = " << E_Kin_
-	    << "\n              Range_or_Value_ = " << Range_or_Value_
-	    << "\n"
-	    << "\n                VDF_Sat_rhoB_ = " << VDF_Sat_rhoB_
-	    << "\n                  VDF_Powers_ = " << cout_a_vector(VDF_Powers_)
-	    << "\n                  VDF_Coeffs_ = " << cout_a_vector(VDF_Coeffs_)
-	    << "\n"
-	    << "\n                 Cell_Number_ = " << cout_a_vector(Cell_Number_)
-	    << "\n" << std::endl;
+
+  
+  if (cfg.verbose) {
+    std::cout << "\n\n*****************************************************************"
+	      << "\n*****************************************************************"
+	      << "\nInformation from the config file:"
+	      << "\n                       Modus_ = " << Modus_
+	      << "\n                    End_Time_ = " << End_Time_
+	      << "\n                     Nevents_ = " << Nevents_
+	      << "\n                   Ensembles_ = " << Ensembles_
+	      << "\n               Testparticles_ = " << Testparticles_
+	      << "\n            Triangular_Range_ = " << Triangular_Range_
+	      << "\n              Gaussian_Sigma_ = " << Gaussian_Sigma_
+	      << "\n"
+	      << "\n                      Length_ = " << Length_
+	      << "\n                 Temperature_ = " << Temperature_
+	      << "\n          number_of_neutrons_ = " << number_of_neutrons_
+	      << "\n           number_of_protons_ = " << number_of_protons_
+	      << "\n"
+	      << "\n                     Sqrtsnn_ = " << Sqrtsnn_
+	      << "\n                       E_Kin_ = " << E_Kin_
+	      << "\n              Range_or_Value_ = " << Range_or_Value_
+	      << "\n"
+	      << "\n                VDF_Sat_rhoB_ = " << VDF_Sat_rhoB_
+	      << "\n                  VDF_Powers_ = " << cout_a_vector(VDF_Powers_)
+	      << "\n                  VDF_Coeffs_ = " << cout_a_vector(VDF_Coeffs_)
+	      << "\n"
+	      << "\n                 Cell_Number_ = " << cout_a_vector(Cell_Number_)
+	      << "\n" << std::endl;
+  }
   
 }
 

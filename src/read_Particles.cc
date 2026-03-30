@@ -45,21 +45,21 @@ ReadParticles::ReadParticles() {
 
 
 // Alternative constructor 1
-ReadParticles::ReadParticles(int folder_min,
-			     int no_of_directories) {
+ReadParticles::ReadParticles(Config cfg) {
   std::cout << "Forming a TChain from "
-	    << no_of_directories - folder_min << " files:" << std::endl;
+	    << cfg.number_of_directories - cfg.start_directory << " files..."
+	    << std::endl;
   // Initialize fChain to zero
   fChain = 0;
 
   // The name of the TChain is the same as that of a single SMASH TTree
   TChain *my_chain = new TChain("particles");
 
-  // Loop over Particles.root files which are assumed to be located in folders named with
-  // consecutive integers (as is the case in SMASH); the range of the loop is given by the
-  // parameters of the constructor
-  for (int i_folder = 0; i_folder < no_of_directories; i_folder++) {
-    const int folder_id = folder_min + i_folder;
+  // Loop over Particles.root files which are assumed to be located in directories named
+  // with consecutive integers (as is the case in SMASH); the range of the loop is given
+  // by the parameters of the constructor
+  for (int i_folder = 0; i_folder < cfg.number_of_directories; i_folder++) {
+    const int folder_id = cfg.start_directory + i_folder;
 
     // provide the address of the file
     std::string ROOT_file_address(Target_Directory);
@@ -70,7 +70,9 @@ ReadParticles::ReadParticles(int folder_min,
     ROOT_file_address += "/Particles.root";
 
     // print out a message to confirm that files are read correctly
-    std::cout << "Attaching a ROOT file from folder " << ROOT_file_address << std::endl;
+    if (cfg.verbose) {
+      std::cout << "Attaching a ROOT file from folder " << ROOT_file_address << std::endl;
+    }
 
     my_chain->Add( ROOT_file_address.c_str() );
     // Add the file path to the vector of file paths
@@ -80,7 +82,7 @@ ReadParticles::ReadParticles(int folder_min,
   // Establish the metadata file name
   std::ostringstream meta;
   meta << Target_Directory << "../data/Particles_"
-       << no_of_directories << "_directories" 
+       << cfg.number_of_directories << "_directories" 
        << ".meta";
   metadata_file_name_ = meta.str();
 
@@ -317,7 +319,7 @@ size_t ReadParticles::compute_chain_hash() const {
 
 
 // Load metadata (if valid) from disk
-bool ReadParticles::load_metadata_if_valid(size_t hash) {
+bool ReadParticles::load_metadata_if_valid(size_t hash, Config cfg) {
   std::ifstream metadata_file(metadata_file_name_);
   if (!metadata_file) return false;
 
@@ -394,7 +396,9 @@ bool ReadParticles::load_metadata_if_valid(size_t hash) {
     }
   }
 
-  print_ROOT_file_properties();
+  if (cfg.verbose) {
+    print_ROOT_file_properties();
+  }
 
   return true;
 }
@@ -450,11 +454,11 @@ void ReadParticles::write_metadata(size_t hash) const {
 // number of particles at initialization, an array listing time steps in an event, and an
 // array listing current_t in an event.
 //////////////////////////////////////////////////////////////////////////////////////////
-void ReadParticles::get_properties() {
+void ReadParticles::get_properties(Config cfg) {
   // Compute the TChain hash
   const size_t hash = compute_chain_hash();
-  if ( load_metadata_if_valid(hash) ) {
-    std::cout << "\n\nLoaded cached ROOT metadata.\n";
+  if ( load_metadata_if_valid(hash, cfg) ) {
+    std::cout << "\nLoaded cached ROOT metadata.\n";
     return;
   }
 
@@ -642,12 +646,8 @@ void ReadParticles::get_properties() {
 
 
     
-    // XXXX
-    // XXXX
-    // Another condition for the Box modus which will work even if Only_Final is used
-    // XXXX
-    // XXXX
-
+    // TO DO: Another condition for the Box modus which will work even if Only_Final is used
+    
     
 
     if ( t[0] > t_first_entry ) {
@@ -753,7 +753,9 @@ void ReadParticles::get_properties() {
   ////////////////////////////////////////////////////////////////////////////////////////
   // Print ROOT file properties
   ////////////////////////////////////////////////////////////////////////////////////////
-  print_ROOT_file_properties();
+  if (cfg.verbose) {
+    print_ROOT_file_properties();
+  }
     
   ////////////////////////////////////////////////////////////////////////////////////////
   // Update the metadata file
