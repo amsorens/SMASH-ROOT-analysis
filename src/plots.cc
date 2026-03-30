@@ -22,6 +22,12 @@
 
 
 
+// A global (within plots.cc) counter for all calls to create canvases to create unique
+// canvas names
+static int canvas_counter = 0;
+
+
+
 std::string double_to_string_with_fixed_decimal_places
   (double value, int number_of_decimal_places) {
   std::ostringstream oss;
@@ -235,10 +241,8 @@ void create_a_histogram_ROOT_file(TH1D histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -260,10 +264,8 @@ void create_a_histogram_ROOT_file(TH1D* histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -285,10 +287,8 @@ void create_a_histogram_ROOT_file(const std::unique_ptr<TH1D>& histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -310,10 +310,8 @@ void create_a_histogram_ROOT_file(TProfile* histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -334,10 +332,8 @@ void create_a_histogram_ROOT_file(const std::unique_ptr<TProfile>& histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -359,10 +355,8 @@ void create_a_histogram_ROOT_file(TH2D histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -384,10 +378,8 @@ void create_a_histogram_ROOT_file(TH2D* histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -409,10 +401,8 @@ void create_a_histogram_ROOT_file(TH3D* histogram,
   char histogram_file_name_root[char_array_size];
   snprintf(histogram_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (histogram_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(histogram_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -433,10 +423,8 @@ void create_a_tgraph_ROOT_file(TGraphErrors* tgraph,
   char tgraph_file_name_root[char_array_size];
   snprintf(tgraph_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (tgraph_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(tgraph_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -458,10 +446,8 @@ void create_a_tgraph_ROOT_file(std::vector<TGraphErrors*> tgraphs,
   char tgraph_file_name_root[char_array_size];
   snprintf(tgraph_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (tgraph_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(tgraph_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -486,10 +472,8 @@ void create_a_tgraph_ROOT_file(std::vector<TGraphErrors> tgraphs,
   char tgraph_file_name_root[char_array_size];
   snprintf(tgraph_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (tgraph_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(tgraph_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -514,10 +498,8 @@ void create_a_tgraph_ROOT_file(std::vector< std::vector<TGraphErrors*> > tgraphs
   char tgraph_file_name_root[char_array_size];
   snprintf(tgraph_file_name_root, char_array_size, "%s.root", basic_file_name);
   
-  TFile *file = new TFile (tgraph_file_name_root, "RECREATE");  
-  if ( file->IsOpen() ){
-    printf("ROOT file %s opened successfully\n\n", basic_file_name);
-  }
+  TFile *file = new TFile(tgraph_file_name_root, "RECREATE");  
+  
   // gFile is a global variable with access to files, which can be accessed by Write()
   gFile = file;
 
@@ -548,7 +530,7 @@ void plot_and_save_1D_histogram(TH1D histogram_1D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
   set_canvas_properties(can, bool_setLogy);
 
   histogram_1D.GetXaxis()->SetRangeUser(histogram_range_lower,
@@ -599,7 +581,7 @@ void plot_and_save_1D_histogram(TH1D* histogram_1D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
   set_canvas_properties(can, bool_setLogy);
 
   histogram_1D->GetXaxis()->SetRangeUser(histogram_range_lower,
@@ -650,7 +632,7 @@ void plot_and_save_1D_histogram(const std::unique_ptr<TH1D>& histogram_1D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
   set_canvas_properties(can, bool_setLogy);
 
   histogram_1D->GetXaxis()->SetRangeUser(histogram_range_lower,
@@ -703,7 +685,7 @@ void plot_and_save_2D_histogram(TH2D histogram_2D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
 
   set_canvas_properties(can, bool_setLogy);
 
@@ -761,7 +743,7 @@ void plot_and_save_2D_histogram(TH2D* histogram_2D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
 
   set_canvas_properties(can, bool_setLogy);
 
@@ -821,7 +803,7 @@ void plot_and_save_3D_histogram(TH3D* histogram_3D,
   // Plot the histogram
   
   //declare a canvas with name, title, size x, size y
-  TCanvas *can = new TCanvas("can","Canvas",1000,1000);
+  TCanvas *can = new TCanvas(Form("can_%d", canvas_counter++), "", 1000, 1000);
 
   set_canvas_properties(can, bool_setLogy);
 
@@ -1151,3 +1133,6 @@ void plot_and_save_TGraph(std::vector<TGraphErrors*> tgraph,
   // Delete pointers?
   //delete chi2_canvas;
 }
+
+
+

@@ -63,9 +63,53 @@ static std::unordered_map<std::string, std::string>
 
 
 
-// Parsing helper
+// Parsing helper for bools
 static bool to_bool(const std::string& s) {
   return (s == "true" || s == "1");
+}
+
+
+
+// Parsing helper for unordered set of ints
+static std::unordered_set<int> to_unordered_set_of_ints(const std::string& s) {
+  std::unordered_set<int> result;
+
+  std::stringstream ss(s);
+  std::string item;
+
+  while (std::getline(ss, item, ',')) {
+    // trim whitespace
+    item.erase(0, item.find_first_not_of(" \t"));
+    item.erase(item.find_last_not_of(" \t") + 1);
+
+    if (!item.empty()) {
+      result.insert(std::stoi(item));
+    }
+  }
+
+  return result;
+}
+
+
+
+// Parsing helper for vector of doubles
+static std::vector<double> to_vector_of_doubles(const std::string& s) {
+  std::vector<double> result;
+
+  std::stringstream ss(s);
+  std::string item;
+
+  while (std::getline(ss, item, ',')) {
+    // trim whitespace
+    item.erase(0, item.find_first_not_of(" \t"));
+    item.erase(item.find_last_not_of(" \t") + 1);
+
+    if (!item.empty()) {
+      result.push_back(std::stod(item));
+    }
+  }
+
+  return result;
 }
 
 
@@ -74,6 +118,14 @@ static bool to_bool(const std::string& s) {
 void Config::load(const std::string& config_filename) {
 
   auto cfg = read_key_value_file(config_filename);
+
+  ///////////////////////////////////////////
+  // Verbosity
+  if (cfg.count("Verbose")) {
+    verbose = to_bool(cfg["Verbose"]);
+  }
+
+  
 
   ///////////////////////////////////////////
   // Directories
@@ -85,12 +137,72 @@ void Config::load(const std::string& config_filename) {
     number_of_directories = std::stoi(cfg["Number_of_directories"]);
   }
 
+
+  
+  ///////////////////////////////////////////
+  // Flow
+  if (cfg.count("Flow_basic")) {
+    flow_basic = to_bool(cfg["Flow_basic"]);
+  }
+
+
+  
   ///////////////////////////////////////////
   // Multiplicity
   if (cfg.count("Multiplicity")) {
     multiplicity = to_bool(cfg["Multiplicity"]);
   }
-
+  if (cfg.count("Multiplicity_excluded_species")) {
+    multiplicity_excluded_species =
+      to_unordered_set_of_ints(cfg["Multiplicity_excluded_species"]);
+  }
+  if (cfg.count("Centrality_class_edges")) {
+    centrality_class_edges =
+      to_vector_of_doubles(cfg["Centrality_class_edges"]);
+  }  
+  if (cfg.count("Multiplicity_FXT_frame")) {
+    multiplicity_FXT_frame = to_bool(cfg["Multiplicity_FXT_frame"]);
+  }
+  if (cfg.count("Multiplicity_default_cuts")) {
+    multiplicity_default_cuts = to_bool(cfg["Multiplicity_default_cuts"]);
+    default_multiplicity_cuts();
+  }
+  // Custom cuts
+  if (cfg.count("Multiplicity_eta_min")) {
+    if (multiplicity_default_cuts) {
+      throw std::runtime_error("Cannot both provide custom multiplicity cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    multiplicity_eta_min = std::stod(cfg["Multiplicity_eta_min"]);
+  }
+  if (cfg.count("Multiplicity_eta_max")) {
+    if (multiplicity_default_cuts) {
+      throw std::runtime_error("Cannot both provide custom multiplicity cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }
+    multiplicity_eta_max = std::stod(cfg["Multiplicity_eta_max"]);
+  }
+  if (cfg.count("Multiplicity_pT_min")) {
+    if (multiplicity_default_cuts) {
+      throw std::runtime_error("Cannot both provide custom multiplicity cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    multiplicity_pT_min = std::stod(cfg["Multiplicity_pT_min"]);
+  }
+  if (cfg.count("Multiplicity_pT_max")) {
+    if (multiplicity_default_cuts) {
+      throw std::runtime_error("Cannot both provide custom multiplicity cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    multiplicity_pT_max = std::stod(cfg["Multiplicity_pT_max"]);
+  }
+  
+  
+  
   ///////////////////////////////////////////
   // Yields
   if (cfg.count("Yields")) {
@@ -110,12 +222,6 @@ void Config::load(const std::string& config_filename) {
   }
   if (cfg.count("Yields_phi_pT_min")) {
     yields_phi_pT_min = std::stod(cfg["Yields_phi_pT_min"]);
-  }
-
-  ///////////////////////////////////////////
-  // Flow
-  if (cfg.count("Flow_basic")) {
-    flow_basic = to_bool(cfg["Flow_basic"]);
   }
 
 }

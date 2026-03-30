@@ -11,6 +11,8 @@
 #ifndef SMASH_ROOT_ANALYSIS_CONSTANTS_H
 #define SMASH_ROOT_ANALYSIS_CONSTANTS_H
 
+#include <TError.h>
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -41,6 +43,34 @@ const char Target_Directory[256] = "../../";
 
 // The size of char arrays used in file names etc.
 const size_t Char_Array_Size = 256;
+
+/////////////////////////////////////////////
+// Messages
+
+// Colors for messages
+namespace color{
+  const std::string RED = "\033[31m";
+  const std::string ORANGE = "\033[33m";
+  const std::string BLUE = "\033[34m";
+  const std::string BOLD = "\033[1m";
+  const std::string RESET = "\033[0m";
+}
+
+// For converting ROOT error levels to strings that can be printed out
+inline const char* error_level_to_string(int level) {
+  switch (level) {
+    case kPrint:   return "kPrint";
+    case kInfo:    return "kInfo";
+    case kWarning: return "kWarning";
+    case kError:   return "kError";
+    case kBreak:   return "kBreak";
+    case kSysError:return "kSysError";
+    case kFatal:   return "kFatal";
+    default:       return "unknown";
+  }
+}
+
+
 
 ///////////////////////////////////////////
 // Maximum number of particles in a single ROOT entry, needed to populate arrays of

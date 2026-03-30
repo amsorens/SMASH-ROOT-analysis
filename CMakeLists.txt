@@ -24,9 +24,19 @@ find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
 
+########################################
+# Copy shell script for copying files
+########################################
+configure_file(
+    ${CMAKE_SOURCE_DIR}/input/copy_src_and_input_files_to_build.sh
+    ${CMAKE_BINARY_DIR}/copy_src_and_input_files_to_build.sh
+    COPYONLY
+)
+
+
 
 ########################################
-# SMASH_ROOT_Analysis
+# Compile SMASH_ROOT_Analysis
 ########################################
 # Add source files
 set(SRC_FILES
@@ -34,6 +44,7 @@ set(SRC_FILES
 
 ./src/basic_functions.cc
 ./src/config.cc
+./src/multiplicity.cc
 ./src/plots.cc
 ./src/read_Particles.cc
 ./src/SMASH_config_info.cc
@@ -43,9 +54,13 @@ set(SRC_FILES
 # Add header files
 set(HEADER_FILES
 ./src/basic_functions.h
+./src/centrality.h
 ./src/config.h
 ./src/constants.h
+./src/fourvector.h
+./src/multiplicity.h
 ./src/plots.h
+./src/range.h
 ./src/read_Particles.h
 ./src/SMASH_config_info.h
 ./src/yields.h
@@ -72,19 +87,13 @@ target_compile_options(SMASH_ROOT_Analysis PRIVATE -O3 -march=native)
 
 
 ########################################
-# Copy example config
+# Copy example config to build directory
 ########################################
-# Copy config.yaml to build directory
 add_custom_command(
     TARGET SMASH_ROOT_Analysis POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_SOURCE_DIR}/input/example_analysis_config.txt
             $<TARGET_FILE_DIR:SMASH_ROOT_Analysis>/analysis_config.txt
 )
-
-
-
-
-
 
 

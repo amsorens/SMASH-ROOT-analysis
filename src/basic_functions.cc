@@ -7,7 +7,29 @@
 // This file contains basic functions used 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+
 #include "./basic_functions.h"
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Messages:
+//////////////////////////////////////////////////////////////////////////////////////////
+void note_msg(const std::string& msg) {
+    std::cout << color::ORANGE << color::BOLD << "\nNote: " << color::RESET
+	      << color::ORANGE << msg << color::RESET << std::endl;
+}
+
+void warning_msg(const std::string& msg) {
+    std::cout << color::ORANGE << color::BOLD << "\nWarning: " << color::RESET
+	      << color::ORANGE << msg << color::RESET << std::endl;
+}
+
+void success_msg() {
+  std::cout << color::BLUE << color::BOLD << "done" << color::RESET << std::endl;
+}
 
 
 
