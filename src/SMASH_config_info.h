@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "./config.h"
+
 
 
 std::string cout_a_vector(std::vector<int> vector);
@@ -45,7 +47,7 @@ class SMASHConfigInfo {
   
   ////////////////////////////////////////////////////////////////////////////////////////
   // Function that reads off chosen variables from the SMASH config file
-  void read_SMASH_config(int starting_folder_number);
+  void read_SMASH_config(Config cfg);
 
 
   

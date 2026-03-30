@@ -33,17 +33,12 @@ int main () {
 
   try{
     ///////////////////////////////////////////
+    // Start measuring time
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    ///////////////////////////////////////////
     // Suppress mundane status messages from ROOT
     gErrorIgnoreLevel = kWarning;
-    note_msg(std::string("The ROOT warning level used is ") +
-	     error_level_to_string(gErrorIgnoreLevel));
-    std::cout << std::endl;
-
-  
-    
-    ///////////////////////////////////////////
-    // Start measuring time
-    auto t_start = std::chrono::high_resolution_clock::now(); 
 
 
   
@@ -63,8 +58,11 @@ int main () {
     // N = Number_of_directories as specified in the config file.
     // Note: A (unique) pointer is used as the size of the ReadParticles object is likely
     // to be very large.
+    std::cout << "\n\n*****************************************************************"
+	      << "\n*****************************************************************"
+	      << "\nLoading data...\n" << std::endl;
     std::unique_ptr<ReadParticles> ROOT_file =
-      std::make_unique<ReadParticles>(cfg.start_directory, cfg.number_of_directories);
+      std::make_unique<ReadParticles>(cfg);
 
     // Measure the time it takes to initialize
     auto t_init = std::chrono::high_resolution_clock::now();
@@ -73,10 +71,10 @@ int main () {
 
     ///////////////////////////////////////////
     // Get the properties of the ROOT file and SMASH config info
-    ROOT_file->get_properties();
+    ROOT_file->get_properties(cfg);
 
     SMASHConfigInfo SMASH_cfg_info;
-    SMASH_cfg_info.read_SMASH_config(cfg.start_directory);
+    SMASH_cfg_info.read_SMASH_config(cfg);
 
     // Measure the time it takes to get properties and info
     auto t_info = std::chrono::high_resolution_clock::now();
@@ -154,6 +152,9 @@ int main () {
     //////////////////////////////////////////////////////////////////////////////////////
     // Finish the run
     //////////////////////////////////////////////////////////////////////////////////////
+    std::cout << "\n\n*****************************************************************"
+	      << "\n*****************************************************************"
+	      << "\nFinishing the run...\n" << std::endl;
 
     ///////////////////////////////////////////
     // Check whether any analyses or tests have been perfomed

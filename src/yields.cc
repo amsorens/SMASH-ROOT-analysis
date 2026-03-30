@@ -266,7 +266,7 @@ void Yields::get_dN_dy
 
   } // for (int i_tree_entry = 0; i_tree_entry < ROOT_file->n_entries(); i_tree_entry++) {
 
-  std::cout << "\n\nFinished filling yields histograms \n\n" << std::endl;
+  std::cout << "\n\nFinished filling yields histograms \n" << std::endl;
 
 
   
