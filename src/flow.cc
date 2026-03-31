@@ -122,7 +122,22 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
   (const std::unique_ptr<TProfile>& p_v1,
    const std::unique_ptr<TProfile>& p_v2,
    const std::unique_ptr<TProfile>& p_v3,
-   int n_events, char* impact_parameter_range_or_value, double time, Config cfg) {
+   int n_events, char* impact_parameter_range_or_value, double time, Config cfg,
+   const bool put_plots_in_separate_directory) {
+  // If put_plots_in_separate_directory is true, then make sure the directory exists
+  if (put_plots_in_separate_directory) {
+    // Full path: Target_Directory + directory name
+    std::filesystem::path folder_path =
+      std::filesystem::path(Target_Directory) / flow_directory_name_;
+
+    std::error_code ec;
+    std::filesystem::create_directories(folder_path, ec);
+    if (ec) {
+      std::cerr << "Warning: could not create directory "
+		<< folder_path.string() << ": " << ec.message() << "\n";
+    }
+  }
+  
   // Establish whether the fits should be chatty
   const char* fit_options = cfg.verbose ? "R" : "RQ";
   
@@ -244,8 +259,9 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v1[Char_Array_Size];
   snprintf(basic_file_name_v1, Char_Array_Size,
-	   "%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
+	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v1->GetName(),
 	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
 	   scale_by_ybeam_info);
@@ -307,8 +323,9 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v2[Char_Array_Size];
   snprintf(basic_file_name_v2, Char_Array_Size,
-	   "%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
+	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v2->GetName(),
 	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
 	   scale_by_ybeam_info);
@@ -370,8 +387,9 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v3[Char_Array_Size];
   snprintf(basic_file_name_v3, Char_Array_Size,
-	   "%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
+	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v3->GetName(),
 	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
 	   scale_by_ybeam_info);
@@ -1044,12 +1062,27 @@ void Flow::plot_and_save_flow_time_evolution_data
    const std::unique_ptr<TGraphErrors>& g_total,
    int n_events, int real_event_equivalent,
    double x_axis_min, double x_axis_max, double y_axis_min, double y_axis_max,
-   int entry_step, Config cfg) {
+   int entry_step, Config cfg, const bool put_plots_in_separate_directory) {
+  // If put_plots_in_separate_directory is true, then make sure the directory exists
+  if (put_plots_in_separate_directory) {
+    // Full path: Target_Directory + directory name
+    std::filesystem::path folder_path =
+      std::filesystem::path(Target_Directory) / flow_evolution_directory_name_;
+
+    std::error_code ec;
+    std::filesystem::create_directories(folder_path, ec);
+    if (ec) {
+      std::cerr << "Warning: could not create directory "
+		<< folder_path.string() << ": " << ec.message() << "\n";
+    }
+  }
+  
   ///////////////////////////////////////////
   // Establish the file name:
   // Identify the directory
   char Flow_evolution_data_directory[Char_Array_Size];
-  snprintf(Flow_evolution_data_directory, Char_Array_Size, "%s", Target_Directory);
+  snprintf(Flow_evolution_data_directory, Char_Array_Size, "%s%s", Target_Directory,
+	   put_plots_in_separate_directory ? flow_evolution_directory_name_ : "");
   
   // Identify the type of analysis, name structure: "g_dv1colldt_proton_basic_y_%.3f"
   // (any g_vn will do, we use g_coll)
@@ -1702,29 +1735,29 @@ void Flow::basic_flow
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_[i], p_v2_proton_basic_[i], p_v3_proton_basic_[i],
        ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
-       cfg);
+       cfg, true);
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_integrated_in_4pi_[i],
        p_v2_proton_basic_integrated_in_4pi_[i],
        p_v3_proton_basic_integrated_in_4pi_[i],
        ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
-       cfg);
+       cfg, true);
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_integrated_at_mid_y_[i],
        p_v2_proton_basic_integrated_at_mid_y_[i],
        p_v3_proton_basic_integrated_at_mid_y_[i],
        ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
-       cfg);
+       cfg, true);
     // pi pluses:
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_pi_plus_basic_[i], p_v2_pi_plus_basic_[i], p_v3_pi_plus_basic_[i],
        ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
-       cfg);
+       cfg, true);
     // pi minuses:
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_pi_minus_basic_[i], p_v2_pi_minus_basic_[i], p_v3_pi_minus_basic_[i],
        ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
-       cfg);
+       cfg, true);
   }
 
   std::cout << "Finished fitting flow histograms" << std::endl;
@@ -2091,7 +2124,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.15, 0.15,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
 
     plot_and_save_flow_time_evolution_data
       (g_dv2coll_dt_proton_basic_[i],
@@ -2101,7 +2134,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.05, 0.05,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
 
     plot_and_save_flow_time_evolution_data
       (g_dv3coll_dt_proton_basic_[i],
@@ -2111,7 +2144,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.075, 0.075,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
 
     plot_and_save_flow_time_evolution_data
       (g_v1coll_proton_basic_[i],
@@ -2121,7 +2154,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.15, 0.15,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
 
     plot_and_save_flow_time_evolution_data
       (g_v2coll_proton_basic_[i],
@@ -2131,7 +2164,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.1, 0.1,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
 
     plot_and_save_flow_time_evolution_data
       (g_v3coll_proton_basic_[i],
@@ -2141,7 +2174,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
        ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
        // these values are just guesses
        -0.075, 0.075,
-       every_nth_entry, cfg);
+       every_nth_entry, cfg, true);
   }
 
   
@@ -2644,7 +2677,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.15, 0.15,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_dv2coll_dt_proton_basic_integrated_in_4pi_,
@@ -2654,7 +2687,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.05, 0.05,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_dv3coll_dt_proton_basic_integrated_in_4pi_,
@@ -2664,7 +2697,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.075, 0.075,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v1coll_proton_basic_integrated_in_4pi_,
@@ -2674,7 +2707,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.15, 0.15,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v2coll_proton_basic_integrated_in_4pi_,
@@ -2684,7 +2717,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.1, 0.1,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v3coll_proton_basic_integrated_in_4pi_,
@@ -2694,7 +2727,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.075, 0.075,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   ///////////////////////////////////////////
   // Plot observables at mid y
@@ -2706,7 +2739,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.15, 0.15,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_dv2coll_dt_proton_basic_integrated_at_mid_y_,
@@ -2716,7 +2749,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.05, 0.05,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_dv3coll_dt_proton_basic_integrated_at_mid_y_,
@@ -2726,7 +2759,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.075, 0.075,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v1coll_proton_basic_integrated_at_mid_y_,
@@ -2736,7 +2769,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.15, 0.15,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v2coll_proton_basic_integrated_at_mid_y_,
@@ -2746,7 +2779,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.1, 0.1,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   plot_and_save_flow_time_evolution_data
     (g_v3coll_proton_basic_integrated_at_mid_y_,
@@ -2756,7 +2789,7 @@ void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
      ROOT_file->current_t_steps()[0], ROOT_file->max_time(),
      // these values are just guesses
      -0.075, 0.075,
-     every_nth_entry, cfg);
+     every_nth_entry, cfg, true);
 
   
 

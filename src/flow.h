@@ -711,7 +711,8 @@ class Flow {
     (const std::unique_ptr<TProfile>& p_v1,
      const std::unique_ptr<TProfile>& p_v2,
      const std::unique_ptr<TProfile>& p_v3,
-     int n_events, char* impact_parameter_range_or_value, double time, Config cfg);
+     int n_events, char* impact_parameter_range_or_value, double time, Config cfg,
+     const bool put_plots_in_separate_directory);
 
   // Function that saves contents of flow TProfiles into a data file (v1, v2, v3)
   void save_flow_vs_rapidity_data
@@ -763,7 +764,7 @@ class Flow {
      const std::unique_ptr<TGraphErrors>& g_total,
      int n_events, int real_event_equivalent,
      double x_axis_min, double x_axis_max, double y_axis_min, double y_axis_max,
-     int entry_step, Config cfg);
+     int entry_step, Config cfg, const bool put_plots_in_separate_directory);
 
   // Function calculating flow from <cos(nphi)> using the ideal theoretical event plane
   void basic_flow
@@ -985,6 +986,13 @@ class Flow {
   std::pair<double, double> v3_pi_minus_fit_ = {0.0, 0.0};
   std::pair<double, double> v3_kaon_plus_fit_ = {0.0, 0.0};
   std::pair<double, double> v3_kaon_minus_fit_ = {0.0, 0.0};
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Handling data:
+  // name of optional directory to store some of the results in
+  const char flow_directory_name_[Char_Array_Size] = "flow_plots/";
+  const char flow_evolution_directory_name_[Char_Array_Size] = "flow_evolution/";
 };
 
 #endif
