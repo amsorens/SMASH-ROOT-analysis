@@ -89,17 +89,12 @@ class ReadParticles {
   TBranch* b_E_kinetic_tot;
   TBranch* b_E_fields_tot;
   TBranch* b_E_tot;
-  TBranch* b_MF_output;
-  TBranch* b_coll_output;
 
   ////////////////////////////////////////////////////////////////////////////////////////
-  // Auxiliary variables to prevent accessing non-existing branches in ROOT files with
-  // standard output
+  // Auxiliary variables to prevent accessing non-existing branches in older ROOT files
   bool id_branch_exists{};
   bool formation_time_branch_exists{};
   bool time_last_collision_branch_exists{};
-  bool MF_output_branch_exists{};
-  bool coll_output_branch_exists{};
 
 
   

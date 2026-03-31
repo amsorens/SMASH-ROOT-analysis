@@ -216,14 +216,6 @@ void ReadParticles::Init(TChain *tree) {
   fChain->SetBranchAddress("E_kinetic_tot", &E_kinetic_tot, &b_E_kinetic_tot);
   fChain->SetBranchAddress("E_fields_tot", &E_fields_tot, &b_E_fields_tot);
   fChain->SetBranchAddress("E_tot", &E_tot, &b_E_tot);
-  if ( fChain->GetBranch("MF_output") ) {
-    fChain->SetBranchAddress("MF_output", &MF_output, &b_MF_output);
-    MF_output_branch_exists = true;
-  }
-  if ( fChain->GetBranch("coll_output") ) {
-    fChain->SetBranchAddress("coll_output", &coll_output, &b_coll_output);
-    coll_output_branch_exists = true;
-  }
   
   Notify();
 }

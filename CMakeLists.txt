@@ -44,6 +44,7 @@ set(SRC_FILES
 
 ./src/basic_functions.cc
 ./src/config.cc
+./src/flow.cc
 ./src/multiplicity.cc
 ./src/plots.cc
 ./src/read_Particles.cc
@@ -57,6 +58,7 @@ set(HEADER_FILES
 ./src/centrality.h
 ./src/config.h
 ./src/constants.h
+./src/flow.h
 ./src/fourvector.h
 ./src/multiplicity.h
 ./src/plots.h

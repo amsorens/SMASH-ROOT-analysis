@@ -13,10 +13,6 @@ Verbose: false
 
 # Analyses: set the needed analyses by toggling true/false:
 
-# Flow:
-Flow_basic: false
-
-
 # Multiplicity:
 Multiplicity: false
 Multiplicity_excluded_species: 2212, -2212, 1000010020   # p, pbar, d
@@ -26,12 +22,19 @@ Multiplicity_default_cuts: true
 
 
 # Yields:
-Yields: true
+Yields: false
 # Provide values if different from default values in config.h
 Yields_proton_pT_min: 0.0
 Yields_lambda_pT_min: 0.0
 Yields_pi_pT_min: 0.0
 Yields_kaon_pT_min: 0.0
 Yields_phi_pT_min: 0.0
+
+
+# Flow:
+Flow_basic: true
+Flow_only_at_final_output: False
+Flow_output_times: 0.0, 5.0, 10.0, 15.0, 20.0
+Flow_default_pT_cuts_STAR_FXT: true
 
 
