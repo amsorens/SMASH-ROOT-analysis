@@ -54,11 +54,11 @@ int main () {
 
     // Print information about verbosity
     if (cfg.verbose) {
-      note_msg("The Verbose option is true."
-	       "\nIf you need less information, adjust the config.");
+      note_msg("The Verbose option is true.\n"
+	       "If you need less information, adjust the Verbose option in  config.");
     } else {
-      note_msg("The Verbose option is false."
-	       "\nIf you need more information, adjust the config.");
+      note_msg("The Verbose option is false.\n"
+	       "If you need more information, adjust the Verbose option in config.");
     }
 
   
@@ -201,11 +201,11 @@ int main () {
     
     // Again print information about verbosity
     if (cfg.verbose) {
-      note_msg("The Verbose option is true."
-	       "\nIf you need less information, adjust the config.");
+      note_msg("The Verbose option is true.\n"
+	       "If you need less information, adjust the Verbose option in config.");
     } else {
-      note_msg("The Verbose option is false."
-	       "\nIf you need more information, adjust the config.");
+      note_msg("The Verbose option is false.\n"
+	       "If you need more information, adjust the Verbose option in the config.");
     }
 
 
