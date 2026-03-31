@@ -114,6 +114,28 @@ static std::vector<double> to_vector_of_doubles(const std::string& s) {
 
 
 
+// Parsing helper for set of doubles
+static std::set<double> to_set_of_doubles(const std::string& s) {
+  std::set<double> result;
+
+  std::stringstream ss(s);
+  std::string item;
+
+  while (std::getline(ss, item, ',')) {
+    // trim whitespace
+    item.erase(0, item.find_first_not_of(" \t"));
+    item.erase(item.find_last_not_of(" \t") + 1);
+
+    if (!item.empty()) {
+      result.insert(std::stod(item));
+    }
+  }
+
+  return result;
+}
+
+
+
 // Function handling the config entries 
 void Config::load(const std::string& config_filename) {
 
@@ -135,14 +157,6 @@ void Config::load(const std::string& config_filename) {
 
   if (cfg.count("Number_of_directories")) {
     number_of_directories = std::stoi(cfg["Number_of_directories"]);
-  }
-
-
-  
-  ///////////////////////////////////////////
-  // Flow
-  if (cfg.count("Flow_basic")) {
-    flow_basic = to_bool(cfg["Flow_basic"]);
   }
 
 
@@ -222,6 +236,130 @@ void Config::load(const std::string& config_filename) {
   }
   if (cfg.count("Yields_phi_pT_min")) {
     yields_phi_pT_min = std::stod(cfg["Yields_phi_pT_min"]);
+  }
+
+
+    
+  ///////////////////////////////////////////
+  // Flow
+  if (cfg.count("Flow_basic")) {
+    flow_basic = to_bool(cfg["Flow_basic"]);
+  }
+  // Time evolution
+  if (cfg.count("Flow_only_at_final_output")) {
+    flow_only_at_final_output = to_bool(cfg["Flow_only_at_final_output"]);
+  }
+  if (cfg.count("Flow_output_times")) {
+    flow_output_times = to_set_of_doubles(cfg["Flow_output_times"]);
+  } 
+  // Rapidity coverage
+  if (cfg.count("Flow_scale_by_beam_rapidity")) {
+    flow_scale_by_beam_rapidity = to_bool(cfg["Flow_scale_by_beam_rapidity"]);
+  }
+  if (cfg.count("Flow_number_of_rapidity_bins")) {
+    flow_number_of_rapidity_bins = std::stoi(cfg["Flow_number_of_rapidity_bins"]);
+  }
+  if (cfg.count("Flow_y_min")) {
+    flow_y_min = std::stod(cfg["Flow_y_min"]);
+  }
+  if (cfg.count("Flow_y_max")) {
+    flow_y_max = std::stod(cfg["Flow_y_max"]);
+  }
+  if (cfg.count("Flow_y_mid_min")) {
+    flow_y_mid_min = std::stod(cfg["Flow_y_mid_min"]);
+  }
+  if (cfg.count("Flow_y_mid_max")) {
+    flow_y_mid_max = std::stod(cfg["Flow_y_mid_max"]);
+  }
+  // Default pT cuts
+  if (cfg.count("Flow_default_pT_cuts_HADES")) {
+    flow_default_pT_cuts_HADES = to_bool(cfg["Flow_default_pT_cuts_HADES"]);
+    default_flow_pT_cuts();
+  }
+  if (cfg.count("Flow_default_pT_cuts_STAR_FXT")) {
+    flow_default_pT_cuts_STAR_FXT = to_bool(cfg["Flow_default_pT_cuts_STAR_FXT"]);
+    default_flow_pT_cuts();
+  }  
+  // Custom pT cuts
+  if (cfg.count("Flow_proton_pT_min")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    proton_pT_min = std::stod(cfg["Flow_proton_pT_min"]);
+  }
+  if (cfg.count("Flow_proton_pT_max")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    proton_pT_max = std::stod(cfg["Flow_proton_pT_max"]);
+  }
+  if (cfg.count("Flow_deuteron_pT_min")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    deuteron_pT_min = std::stod(cfg["Flow_deuteron_pT_min"]);
+  }
+  if (cfg.count("Flow_deuteron_pT_max")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    deuteron_pT_max = std::stod(cfg["Flow_deuteron_pT_max"]);
+  }
+  if (cfg.count("Flow_lambda_pT_min")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    lambda_pT_min = std::stod(cfg["Flow_lambda_pT_min"]);
+  }
+  if (cfg.count("Flow_lambda_pT_max")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    lambda_pT_max = std::stod(cfg["Flow_lambda_pT_max"]);
+  }
+  if (cfg.count("Flow_pion_pT_min")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    pion_pT_min = std::stod(cfg["Flow_pion_pT_min"]);
+  }
+  if (cfg.count("Flow_pion_pT_max")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    pion_pT_max = std::stod(cfg["Flow_pion_pT_max"]);
+  }
+  if (cfg.count("Flow_kaon_pT_min")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    kaon_pT_min = std::stod(cfg["Flow_kaon_pT_min"]);
+  }
+  if (cfg.count("Flow_kaon_pT_max")) {
+    if (flow_default_pT_cuts_HADES || flow_default_pT_cuts_STAR_FXT) {
+      throw std::runtime_error("Cannot both provide custom flow pT cuts "
+			       "and ask for default cuts.\n"
+			       "Adjust the config file.");
+    }    
+    kaon_pT_max = std::stod(cfg["Flow_kaon_pT_max"]);
   }
 
 }
