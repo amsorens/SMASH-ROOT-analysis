@@ -11,6 +11,7 @@
 #define SMASH_ROOT_ANALYSIS_CONFIG_H
 
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 
