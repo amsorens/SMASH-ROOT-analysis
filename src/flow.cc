@@ -9,7 +9,6 @@
 
 #include "./flow.h"
 
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>        // for std::unique_ptr
@@ -127,15 +126,8 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
   // If put_plots_in_separate_directory is true, then make sure the directory exists
   if (put_plots_in_separate_directory) {
     // Full path: Target_Directory + directory name
-    std::filesystem::path folder_path =
-      std::filesystem::path(Target_Directory) / flow_directory_name_;
-
-    std::error_code ec;
-    std::filesystem::create_directories(folder_path, ec);
-    if (ec) {
-      std::cerr << "Warning: could not create directory "
-		<< folder_path.string() << ": " << ec.message() << "\n";
-    }
+    const std::string folder_path = std::string(Target_Directory) + flow_directory_name_;
+    create_directory(folder_path);
   }
   
   // Establish whether the fits should be chatty
@@ -1065,16 +1057,10 @@ void Flow::plot_and_save_flow_time_evolution_data
    int entry_step, Config cfg, const bool put_plots_in_separate_directory) {
   // If put_plots_in_separate_directory is true, then make sure the directory exists
   if (put_plots_in_separate_directory) {
-    // Full path: Target_Directory + directory name
-    std::filesystem::path folder_path =
-      std::filesystem::path(Target_Directory) / flow_evolution_directory_name_;
+    const std::string folder_path =
+      std::string(Target_Directory) + flow_evolution_directory_name_;
 
-    std::error_code ec;
-    std::filesystem::create_directories(folder_path, ec);
-    if (ec) {
-      std::cerr << "Warning: could not create directory "
-		<< folder_path.string() << ": " << ec.message() << "\n";
-    }
+    create_directory(folder_path);
   }
   
   ///////////////////////////////////////////

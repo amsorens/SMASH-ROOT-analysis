@@ -7,7 +7,11 @@
 // This file contains basic functions used 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#include "TSystem.h"
+
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 #include "./basic_functions.h"
 
@@ -15,7 +19,7 @@
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Messages:
+// Messages
 //////////////////////////////////////////////////////////////////////////////////////////
 void note_msg(const std::string& msg) {
     std::cout << color::ORANGE << color::BOLD << "\nNote: " << color::RESET
@@ -29,6 +33,25 @@ void warning_msg(const std::string& msg) {
 
 void success_msg() {
   std::cout << color::BLUE << color::BOLD << "done" << color::RESET << std::endl;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Output files helper
+//////////////////////////////////////////////////////////////////////////////////////////
+void create_directory(const std::string& directory) {
+  // Use a ROOT utility to check for the existence of and create a directory.
+  // If it already exists, there is nothing to do.
+  if ( !gSystem->AccessPathName(directory.c_str()) ) {
+    return;
+  }
+  
+  const int status = gSystem->mkdir(directory.c_str(), true);
+
+  if (status != 0) {
+    throw std::runtime_error("Could not create directory: " + directory);
+  }
 }
 
 

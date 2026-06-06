@@ -29,4 +29,5 @@ SMASH_ROOT_Analysis
 
 # ignore macOS junk
 .DS_Store
+**/.DS_Store
 

@@ -9,7 +9,6 @@
 
 #include "./yields.h"
 
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -30,20 +29,14 @@
 
 void Yields::plot_and_save_1D_histogram_wrapper
   (TH1D* h1, const char* x_axis_label, const char* y_axis_label,
-   const char* plot_option, const bool put_plots_in_separate_directory)
-{
+   const char* plot_option, const bool put_plots_in_separate_directory) {
   // If put_plots_in_separate_directory is true, then make sure the directory exists
   if (put_plots_in_separate_directory) {
     // Full path: Target_Directory + directory name
-    std::filesystem::path folder_path =
-      std::filesystem::path(Target_Directory) / yields_directory_name_;
+    const std::string folder_path =
+      std::string(Target_Directory) + yields_directory_name_;
 
-    std::error_code ec;
-    std::filesystem::create_directories(folder_path, ec);
-    if (ec) {
-      std::cerr << "Warning: could not create directory "
-		<< folder_path.string() << ": " << ec.message() << "\n";
-    }
+    create_directory(folder_path);
   }
   
   // Get the name for the plot and files (log and not log)
