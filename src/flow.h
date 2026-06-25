@@ -28,11 +28,49 @@
 
 
 
-inline void initialize_tgraph
+// Helper functions for initializating data structures
+
+inline void populate_TH1Ds
+  (std::vector<std::unique_ptr<TH1D>>& vector_of_TH1Ds_to_populate,
+   int vector_size, const char* base_name,
+   int number_of_bins, double bin_min, double bin_max, bool show_stats) {
+  for (int i = 0; i < vector_size; i++) {
+    char histogram_name[Char_Array_Size];
+    snprintf(histogram_name, Char_Array_Size, "%s_%d", base_name, i);
+
+    vector_of_TH1Ds_to_populate.emplace_back
+      (std::make_unique<TH1D>(histogram_name, histogram_name,
+			      number_of_bins, bin_min, bin_max));
+    vector_of_TH1Ds_to_populate[i]->Sumw2();
+    vector_of_TH1Ds_to_populate[i]->SetStats(show_stats);
+  }
+}
+
+
+
+inline void populate_TProfiles
+  (std::vector<std::unique_ptr<TProfile>>& vector_of_TProfiles_to_populate,
+   int vector_size, const char* base_name,
+   int number_of_bins, double bin_min, double bin_max, bool show_stats) {
+  for (int i = 0; i < vector_size; i++) {
+    char tprofile_name[Char_Array_Size];
+    snprintf(tprofile_name, Char_Array_Size, "%s_%d", base_name, i);
+
+    vector_of_TProfiles_to_populate.emplace_back
+      (std::make_unique<TProfile>(tprofile_name, tprofile_name,
+				  number_of_bins, bin_min, bin_max));
+    vector_of_TProfiles_to_populate[i]->Sumw2();
+    vector_of_TProfiles_to_populate[i]->SetStats(show_stats);
+  }
+}
+
+
+
+inline void initialize_TGraph
   (std::unique_ptr<TGraphErrors>& tgraph_to_initialize,
-   const char* basic_name, const char* prefix) {
+   const char* base_name, const char* prefix) {
   char graph_name[Char_Array_Size];
-  snprintf(graph_name, Char_Array_Size, "%s%s", prefix, basic_name);
+  snprintf(graph_name, Char_Array_Size, "%s%s", prefix, base_name);
 
   tgraph_to_initialize = std::make_unique<TGraphErrors>();
   tgraph_to_initialize->SetName(graph_name);
@@ -41,17 +79,13 @@ inline void initialize_tgraph
 
 
 
-inline void populate_tgraphs
+inline void append_TGraphErrors
   (std::vector<std::unique_ptr<TGraphErrors>>& vector_of_tgraphs_to_populate,
-   const char* basic_name, const char* prefix) {
-  char graph_name[Char_Array_Size];
-  snprintf(graph_name, Char_Array_Size, "%s%s", prefix, basic_name);
+   const char* base_name, const char* prefix) {
+  std::unique_ptr<TGraphErrors> tgraph;
+  initialize_TGraph(tgraph, base_name, prefix);
 
-  auto graph = std::make_unique<TGraphErrors>();
-  graph->SetName(graph_name);
-  graph->SetTitle(graph_name);
-
-  vector_of_tgraphs_to_populate.push_back(std::move(graph));
+  vector_of_tgraphs_to_populate.push_back(std::move(tgraph));
 }
 
 
@@ -182,366 +216,105 @@ class Flow {
 			       "calculate flow at all time steps.");
     }
     //////////////////////////////////////////////////////////////////////////////////////
-    // Initialize all elements of TProfile vectors: one TProfile for each time step for a
-    // given observable;
-    for (int i = 0; i < number_of_time_steps_; i++) {
-      ////////////////////////////////////////////////////////////////////////////////////
-      // Initialize the yield histograms
-      char h_N_proton_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_proton_in_4pi_name, Char_Array_Size, "h_N_proton_in_4pi_%d", i);
-      h_N_proton_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_proton_in_4pi_name, h_N_proton_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_proton_in_4pi_[i]->Sumw2();   
-      h_N_proton_in_4pi_[i]->SetStats(show_stats);
+    // Initialize yield histograms = elements of TH1D vectors: one TH1D for each time step
+    populate_TH1Ds(h_N_proton_in_4pi_, number_of_time_steps_,
+		   "h_N_proton_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TH1Ds(h_N_deuteron_in_4pi_, number_of_time_steps_,
+		   "h_N_deuteron_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TH1Ds(h_N_lambda_in_4pi_, number_of_time_steps_,
+		   "h_N_lambda_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TH1Ds(h_N_pi_plus_in_4pi_, number_of_time_steps_,
+		   "h_N_pi_plus_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TH1Ds(h_N_pi_minus_in_4pi_, number_of_time_steps_,
+		   "h_N_pi_minus_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TH1Ds(h_N_kaon_plus_in_4pi_, number_of_time_steps_,
+		   "h_N_kaon_plus_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);   
+    populate_TH1Ds(h_N_kaon_minus_in_4pi_, number_of_time_steps_,
+		   "h_N_kaon_minus_in_4pi", y_number_of_bins_, y_min_, y_max_, show_stats);
 
-      char h_N_deuteron_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_deuteron_in_4pi_name, Char_Array_Size, "h_N_deuteron_in_4pi_%d", i);
-      h_N_deuteron_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_deuteron_in_4pi_name, h_N_deuteron_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_deuteron_in_4pi_[i]->Sumw2();   
-      h_N_deuteron_in_4pi_[i]->SetStats(show_stats);
-
-      char h_N_lambda_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_lambda_in_4pi_name, Char_Array_Size, "h_N_lambda_in_4pi_%d", i);
-      h_N_lambda_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_lambda_in_4pi_name, h_N_lambda_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_lambda_in_4pi_[i]->Sumw2();   
-      h_N_lambda_in_4pi_[i]->SetStats(show_stats);
-
-      char h_N_pi_plus_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_pi_plus_in_4pi_name, Char_Array_Size, "h_N_pi_plus_in_4pi_%d", i);
-      h_N_pi_plus_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_pi_plus_in_4pi_name, h_N_pi_plus_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_pi_plus_in_4pi_[i]->Sumw2();   
-      h_N_pi_plus_in_4pi_[i]->SetStats(show_stats);
-
-      char h_N_pi_minus_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_pi_minus_in_4pi_name, Char_Array_Size, "h_N_pi_minus_in_4pi_%d", i);
-      h_N_pi_minus_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_pi_minus_in_4pi_name, h_N_pi_minus_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_pi_minus_in_4pi_[i]->Sumw2();   
-      h_N_pi_minus_in_4pi_[i]->SetStats(show_stats);
-
-      char h_N_kaon_plus_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_kaon_plus_in_4pi_name, Char_Array_Size, "h_N_kaon_plus_in_4pi_%d", i);
-      h_N_kaon_plus_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_kaon_plus_in_4pi_name, h_N_kaon_plus_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_kaon_plus_in_4pi_[i]->Sumw2();   
-      h_N_kaon_plus_in_4pi_[i]->SetStats(show_stats);
-
-      char h_N_kaon_minus_in_4pi_name[Char_Array_Size];
-      snprintf(h_N_kaon_minus_in_4pi_name, Char_Array_Size, "h_N_kaon_minus_in_4pi_%d", i);
-      h_N_kaon_minus_in_4pi_.emplace_back
-	(std::make_unique<TH1D>(h_N_kaon_minus_in_4pi_name, h_N_kaon_minus_in_4pi_name,
-				y_number_of_bins_, y_min_, y_max_));
-      h_N_kaon_minus_in_4pi_[i]->Sumw2();   
-      h_N_kaon_minus_in_4pi_[i]->SetStats(show_stats);
-
-      // Initialize the yield histograms at midrapidity; the number of bins is hardcoded:
-      char h_N_proton_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_proton_at_mid_y_name, Char_Array_Size, "h_N_proton_at_mid_y_%d", i);
-      h_N_proton_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_proton_at_mid_y_name, h_N_proton_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_proton_at_mid_y_[i]->Sumw2();   
-      h_N_proton_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_deuteron_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_deuteron_at_mid_y_name, Char_Array_Size, "h_N_deuteron_at_mid_y_%d", i);
-      h_N_deuteron_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_deuteron_at_mid_y_name, h_N_deuteron_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_deuteron_at_mid_y_[i]->Sumw2();   
-      h_N_deuteron_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_lambda_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_lambda_at_mid_y_name, Char_Array_Size, "h_N_lambda_at_mid_y_%d", i);
-      h_N_lambda_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_lambda_at_mid_y_name, h_N_lambda_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_lambda_at_mid_y_[i]->Sumw2();   
-      h_N_lambda_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_pi_plus_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_pi_plus_at_mid_y_name, Char_Array_Size, "h_N_pi_plus_at_mid_y_%d", i);
-      h_N_pi_plus_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_pi_plus_at_mid_y_name, h_N_pi_plus_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_pi_plus_at_mid_y_[i]->Sumw2();   
-      h_N_pi_plus_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_pi_minus_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_pi_minus_at_mid_y_name, Char_Array_Size, "h_N_pi_minus_at_mid_y_%d", i);
-      h_N_pi_minus_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_pi_minus_at_mid_y_name, h_N_pi_minus_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_pi_minus_at_mid_y_[i]->Sumw2();   
-      h_N_pi_minus_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_kaon_plus_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_kaon_plus_at_mid_y_name, Char_Array_Size, "h_N_kaon_plus_at_mid_y_%d", i);
-      h_N_kaon_plus_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_kaon_plus_at_mid_y_name, h_N_kaon_plus_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_kaon_plus_at_mid_y_[i]->Sumw2();   
-      h_N_kaon_plus_at_mid_y_[i]->SetStats(show_stats);
-
-      char h_N_kaon_minus_at_mid_y_name[Char_Array_Size];
-      snprintf(h_N_kaon_minus_at_mid_y_name, Char_Array_Size, "h_N_kaon_minus_at_mid_y_%d", i);
-      h_N_kaon_minus_at_mid_y_.emplace_back
-	(std::make_unique<TH1D>(h_N_kaon_minus_at_mid_y_name, h_N_kaon_minus_at_mid_y_name,
-				10, y_mid_min_, y_mid_max_));
-      h_N_kaon_minus_at_mid_y_[i]->Sumw2();   
-      h_N_kaon_minus_at_mid_y_[i]->SetStats(show_stats);
-      
-      ////////////////////////////////////////////////////////////////////////////////////
-      // Initialize the v1 TProfiles
-      char p_v1_proton_basic_name[Char_Array_Size];
-      snprintf(p_v1_proton_basic_name, Char_Array_Size, "p_v1_proton_basic_%d", i);
-      p_v1_proton_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_proton_basic_name, p_v1_proton_basic_name,
-				    // number_of_bins of bins from y_min to y_max, filled
-				    // with values from -1 to 1
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_proton_basic_[i]->Sumw2();   
-      p_v1_proton_basic_[i]->SetStats(show_stats);
-
-      char p_v1_deuteron_basic_name[Char_Array_Size];
-      snprintf(p_v1_deuteron_basic_name, Char_Array_Size, "p_v1_deuteron_basic_%d", i);
-      p_v1_deuteron_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_deuteron_basic_name, p_v1_deuteron_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_deuteron_basic_[i]->Sumw2();   
-      p_v1_deuteron_basic_[i]->SetStats(show_stats);
-
-      char p_v1_lambda_basic_name[Char_Array_Size];
-      snprintf(p_v1_lambda_basic_name, Char_Array_Size, "p_v1_lambda_basic_%d", i);
-      p_v1_lambda_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_lambda_basic_name, p_v1_lambda_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_lambda_basic_[i]->Sumw2();   
-      p_v1_lambda_basic_[i]->SetStats(show_stats);
-
-      char p_v1_pi_plus_basic_name[Char_Array_Size];
-      snprintf(p_v1_pi_plus_basic_name, Char_Array_Size, "p_v1_pi_plus_basic_%d", i);
-      p_v1_pi_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_pi_plus_basic_name, p_v1_pi_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_pi_plus_basic_[i]->Sumw2();
-      p_v1_pi_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v1_pi_minus_basic_name[Char_Array_Size];
-      snprintf(p_v1_pi_minus_basic_name, Char_Array_Size, "p_v1_pi_minus_basic_%d", i);
-      p_v1_pi_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_pi_minus_basic_name, p_v1_pi_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_pi_minus_basic_[i]->Sumw2();
-      p_v1_pi_minus_basic_[i]->SetStats(show_stats);
-
-      char p_v1_kaon_plus_basic_name[Char_Array_Size];
-      snprintf(p_v1_kaon_plus_basic_name, Char_Array_Size, "p_v1_kaon_plus_basic_%d", i);
-      p_v1_kaon_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_kaon_plus_basic_name, p_v1_kaon_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_kaon_plus_basic_[i]->Sumw2();
-      p_v1_kaon_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v1_kaon_minus_basic_name[Char_Array_Size];
-      snprintf(p_v1_kaon_minus_basic_name, Char_Array_Size, "p_v1_kaon_minus_basic_%d", i);
-      p_v1_kaon_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v1_kaon_minus_basic_name, p_v1_kaon_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v1_kaon_minus_basic_[i]->Sumw2();
-      p_v1_kaon_minus_basic_[i]->SetStats(show_stats);
-
-      ////////////////////////////////////////////////////////////////////////////////////
-      // Initialize the v2 TProfiles
-      char p_v2_proton_basic_name[Char_Array_Size];
-      snprintf(p_v2_proton_basic_name, Char_Array_Size, "p_v2_proton_basic_%d", i);
-      p_v2_proton_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_proton_basic_name, p_v2_proton_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_proton_basic_[i]->Sumw2();   
-      p_v2_proton_basic_[i]->SetStats(show_stats);
-
-      char p_v2_deuteron_basic_name[Char_Array_Size];
-      snprintf(p_v2_deuteron_basic_name, Char_Array_Size, "p_v2_deuteron_basic_%d", i);
-      p_v2_deuteron_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_deuteron_basic_name, p_v2_deuteron_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_deuteron_basic_[i]->Sumw2();   
-      p_v2_deuteron_basic_[i]->SetStats(show_stats);
-
-      char p_v2_lambda_basic_name[Char_Array_Size];
-      snprintf(p_v2_lambda_basic_name, Char_Array_Size, "p_v2_lambda_basic_%d", i);
-      p_v2_lambda_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_lambda_basic_name, p_v2_lambda_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_lambda_basic_[i]->Sumw2();   
-      p_v2_lambda_basic_[i]->SetStats(show_stats);
-
-      char p_v2_pi_plus_basic_name[Char_Array_Size];
-      snprintf(p_v2_pi_plus_basic_name, Char_Array_Size, "p_v2_pi_plus_basic_%d", i);
-      p_v2_pi_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_pi_plus_basic_name, p_v2_pi_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_pi_plus_basic_[i]->Sumw2();   
-      p_v2_pi_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v2_pi_minus_basic_name[Char_Array_Size];
-      snprintf(p_v2_pi_minus_basic_name, Char_Array_Size, "p_v2_pi_minus_basic_%d", i);
-      p_v2_pi_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_pi_minus_basic_name, p_v2_pi_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_pi_minus_basic_[i]->Sumw2();   
-      p_v2_pi_minus_basic_[i]->SetStats(show_stats);
-
-      char p_v2_kaon_plus_basic_name[Char_Array_Size];
-      snprintf(p_v2_kaon_plus_basic_name, Char_Array_Size, "p_v2_kaon_plus_basic_%d", i);
-      p_v2_kaon_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_kaon_plus_basic_name, p_v2_kaon_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_kaon_plus_basic_[i]->Sumw2();   
-      p_v2_kaon_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v2_kaon_minus_basic_name[Char_Array_Size];
-      snprintf(p_v2_kaon_minus_basic_name, Char_Array_Size, "p_v2_kaon_minus_basic_%d", i);
-      p_v2_kaon_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v2_kaon_minus_basic_name, p_v2_kaon_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v2_kaon_minus_basic_[i]->Sumw2();   
-      p_v2_kaon_minus_basic_[i]->SetStats(show_stats);
-
-      ////////////////////////////////////////////////////////////////////////////////////
-      // Initialize the v3 TProfiles
-      char p_v3_proton_basic_name[Char_Array_Size];
-      snprintf(p_v3_proton_basic_name, Char_Array_Size, "p_v3_proton_basic_%d", i);
-      p_v3_proton_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_proton_basic_name, p_v3_proton_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_proton_basic_[i]->Sumw2();   
-      p_v3_proton_basic_[i]->SetStats(show_stats);
-
-      char p_v3_deuteron_basic_name[Char_Array_Size];
-      snprintf(p_v3_deuteron_basic_name, Char_Array_Size, "p_v3_deuteron_basic_%d", i);
-      p_v3_deuteron_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_deuteron_basic_name, p_v3_deuteron_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_deuteron_basic_[i]->Sumw2();   
-      p_v3_deuteron_basic_[i]->SetStats(show_stats);
-
-      char p_v3_lambda_basic_name[Char_Array_Size];
-      snprintf(p_v3_lambda_basic_name, Char_Array_Size, "p_v3_lambda_basic_%d", i);
-      p_v3_lambda_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_lambda_basic_name, p_v3_lambda_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_lambda_basic_[i]->Sumw2();   
-      p_v3_lambda_basic_[i]->SetStats(show_stats);
-
-      char p_v3_pi_plus_basic_name[Char_Array_Size];
-      snprintf(p_v3_pi_plus_basic_name, Char_Array_Size, "p_v3_pi_plus_basic_%d", i);
-      p_v3_pi_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_pi_plus_basic_name, p_v3_pi_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_pi_plus_basic_[i]->Sumw2();   
-      p_v3_pi_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v3_pi_minus_basic_name[Char_Array_Size];
-      snprintf(p_v3_pi_minus_basic_name, Char_Array_Size, "p_v3_pi_minus_basic_%d", i);
-      p_v3_pi_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_pi_minus_basic_name, p_v3_pi_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_pi_minus_basic_[i]->Sumw2();   
-      p_v3_pi_minus_basic_[i]->SetStats(show_stats);
-
-      char p_v3_kaon_plus_basic_name[Char_Array_Size];
-      snprintf(p_v3_kaon_plus_basic_name, Char_Array_Size, "p_v3_kaon_plus_basic_%d", i);
-      p_v3_kaon_plus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_kaon_plus_basic_name, p_v3_kaon_plus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_kaon_plus_basic_[i]->Sumw2();   
-      p_v3_kaon_plus_basic_[i]->SetStats(show_stats);
-
-      char p_v3_kaon_minus_basic_name[Char_Array_Size];
-      snprintf(p_v3_kaon_minus_basic_name, Char_Array_Size, "p_v3_kaon_minus_basic_%d", i);
-      p_v3_kaon_minus_basic_.emplace_back
-	(std::make_unique<TProfile>(p_v3_kaon_minus_basic_name, p_v3_kaon_minus_basic_name,
-				    y_number_of_bins_, y_min_, y_max_, -1.0, 1.0));
-      p_v3_kaon_minus_basic_[i]->Sumw2();   
-      p_v3_kaon_minus_basic_[i]->SetStats(show_stats);
-      ////////////////////////////////////////////////////////////////////////////////////
-      // Initialize the integrated v1, v2, v3 TProfiles
-      char p_v1_proton_basic_integrated_in_4pi_name[Char_Array_Size];
-      snprintf(p_v1_proton_basic_integrated_in_4pi_name, Char_Array_Size,
-	       "p_v1_proton_basic_integrated_in_4pi_%d", i);
-      p_v1_proton_basic_integrated_in_4pi_.emplace_back
-	(std::make_unique<TProfile>(p_v1_proton_basic_integrated_in_4pi_name,
-				    p_v1_proton_basic_integrated_in_4pi_name,
-				    // 1 bin from y_min to y_max, filled
-				    // with values from -1 to 1
-				    1, y_min_, y_max_, -1.0, 1.0));
-      p_v1_proton_basic_integrated_in_4pi_[i]->Sumw2();   
-      p_v1_proton_basic_integrated_in_4pi_[i]->SetStats(show_stats);
-
-      char p_v1_proton_basic_integrated_at_mid_y_name[Char_Array_Size];
-      snprintf(p_v1_proton_basic_integrated_at_mid_y_name, Char_Array_Size,
-	       "p_v1_proton_basic_integrated_at_mid_y_%d", i);
-      p_v1_proton_basic_integrated_at_mid_y_.emplace_back
-	(std::make_unique<TProfile>(p_v1_proton_basic_integrated_at_mid_y_name,
-				    p_v1_proton_basic_integrated_at_mid_y_name,
-				    // 1 bin from y_min to y_max, filled
-				    // with values from -1 to 1
-				    1, y_mid_min_, y_mid_max_, -1.0, 1.0));
-      p_v1_proton_basic_integrated_at_mid_y_[i]->Sumw2();   
-      p_v1_proton_basic_integrated_at_mid_y_[i]->SetStats(show_stats);
-
-      char p_v2_proton_basic_integrated_in_4pi_name[Char_Array_Size];
-      snprintf(p_v2_proton_basic_integrated_in_4pi_name, Char_Array_Size,
-	       "p_v2_proton_basic_integrated_in_4pi_%d", i);
-      p_v2_proton_basic_integrated_in_4pi_.emplace_back
-	(std::make_unique<TProfile>(p_v2_proton_basic_integrated_in_4pi_name,
-				    p_v2_proton_basic_integrated_in_4pi_name,
-				    1, y_min_, y_max_, -1.0, 1.0));
-      p_v2_proton_basic_integrated_in_4pi_[i]->Sumw2();   
-      p_v2_proton_basic_integrated_in_4pi_[i]->SetStats(show_stats);
-
-      char p_v2_proton_basic_integrated_at_mid_y_name[Char_Array_Size];
-      snprintf(p_v2_proton_basic_integrated_at_mid_y_name, Char_Array_Size,
-	       "p_v2_proton_basic_integrated_at_mid_y_%d", i);
-      p_v2_proton_basic_integrated_at_mid_y_.emplace_back
-	(std::make_unique<TProfile>(p_v2_proton_basic_integrated_at_mid_y_name,
-				    p_v2_proton_basic_integrated_at_mid_y_name,
-				    1, y_mid_min_, y_mid_max_, -1.0, 1.0));
-      p_v2_proton_basic_integrated_at_mid_y_[i]->Sumw2();   
-      p_v2_proton_basic_integrated_at_mid_y_[i]->SetStats(show_stats);
-
-      char p_v3_proton_basic_integrated_in_4pi_name[Char_Array_Size];
-      snprintf(p_v3_proton_basic_integrated_in_4pi_name, Char_Array_Size,
-	       "p_v3_proton_basic_integrated_in_4pi_%d", i);
-      p_v3_proton_basic_integrated_in_4pi_.emplace_back
-	(std::make_unique<TProfile>(p_v3_proton_basic_integrated_in_4pi_name,
-				    p_v3_proton_basic_integrated_in_4pi_name,
-				    1, y_min_, y_max_, -1.0, 1.0));
-      p_v3_proton_basic_integrated_in_4pi_[i]->Sumw2();   
-      p_v3_proton_basic_integrated_in_4pi_[i]->SetStats(show_stats);
-
-      char p_v3_proton_basic_integrated_at_mid_y_name[Char_Array_Size];
-      snprintf(p_v3_proton_basic_integrated_at_mid_y_name, Char_Array_Size,
-	       "p_v3_proton_basic_integrated_at_mid_y_%d", i);
-      p_v3_proton_basic_integrated_at_mid_y_.emplace_back
-	(std::make_unique<TProfile>(p_v3_proton_basic_integrated_at_mid_y_name,
-				    p_v3_proton_basic_integrated_at_mid_y_name,
-				    1, y_mid_min_, y_mid_max_, -1.0, 1.0));
-      p_v3_proton_basic_integrated_at_mid_y_[i]->Sumw2();   
-      p_v3_proton_basic_integrated_at_mid_y_[i]->SetStats(show_stats);
-      
-    }
+    // For yield histograms at midrapidity, the number of bins is hardcoded
+    populate_TH1Ds(h_N_proton_at_mid_y_, number_of_time_steps_,
+		   "h_N_proton_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_deuteron_at_mid_y_, number_of_time_steps_,
+		   "h_N_deuteron_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_lambda_at_mid_y_, number_of_time_steps_,
+		   "h_N_lambda_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_pi_plus_at_mid_y_, number_of_time_steps_,
+		   "h_N_pi_plus_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_pi_minus_at_mid_y_, number_of_time_steps_,
+		   "h_N_pi_minus_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_kaon_plus_at_mid_y_, number_of_time_steps_,
+		   "h_N_kaon_plus_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    populate_TH1Ds(h_N_kaon_minus_at_mid_y_, number_of_time_steps_,
+		   "h_N_kaon_minus_at_mid_y", 10, y_mid_min_, y_mid_max_, show_stats);
+    
+    //////////////////////////////////////////////////////////////////////////////////////
+    // Initialize flow TProfiles = elements of TProfile vectors: one TProfile for each
+    // time step;
+    // v1:
+    populate_TProfiles(p_v1_proton_basic_, number_of_time_steps_,
+		       "p_v1_proton_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_deuteron_basic_, number_of_time_steps_,
+		       "p_v1_deuteron_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_lambda_basic_, number_of_time_steps_,
+		       "p_v1_lambda_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_pi_plus_basic_, number_of_time_steps_,
+		       "p_v1_pi_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_pi_minus_basic_, number_of_time_steps_,
+		       "p_v1_pi_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_kaon_plus_basic_, number_of_time_steps_,
+		       "p_v1_kaon_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_kaon_minus_basic_, number_of_time_steps_,
+		       "p_v1_kaon_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    // v2:
+    populate_TProfiles(p_v2_proton_basic_, number_of_time_steps_,
+		       "p_v2_proton_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_deuteron_basic_, number_of_time_steps_,
+		       "p_v2_deuteron_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_lambda_basic_, number_of_time_steps_,
+		       "p_v2_lambda_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_pi_plus_basic_, number_of_time_steps_,
+		       "p_v2_pi_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_pi_minus_basic_, number_of_time_steps_,
+		       "p_v2_pi_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_kaon_plus_basic_, number_of_time_steps_,
+		       "p_v2_kaon_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_kaon_minus_basic_, number_of_time_steps_,
+		       "p_v2_kaon_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    // v3:
+    populate_TProfiles(p_v3_proton_basic_, number_of_time_steps_,
+		       "p_v3_proton_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_deuteron_basic_, number_of_time_steps_,
+		       "p_v3_deuteron_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_lambda_basic_, number_of_time_steps_,
+		       "p_v3_lambda_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_pi_plus_basic_, number_of_time_steps_,
+		       "p_v3_pi_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_pi_minus_basic_, number_of_time_steps_,
+		       "p_v3_pi_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_kaon_plus_basic_, number_of_time_steps_,
+		       "p_v3_kaon_plus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_kaon_minus_basic_, number_of_time_steps_,
+		       "p_v3_kaon_minus_basic", y_number_of_bins_, y_min_, y_max_, show_stats);
+    // integrated proton flow (only one bin filled from min to max):
+    populate_TProfiles(p_v1_proton_basic_integrated_in_4pi_, number_of_time_steps_,
+		       "p_v1_proton_basic_integrated_in_4pi",
+		       1, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v1_proton_basic_integrated_at_mid_y_, number_of_time_steps_,
+		       "p_v1_proton_basic_integrated_at_mid_y",
+		       1, y_mid_min_, y_mid_max_, show_stats);
+    populate_TProfiles(p_v2_proton_basic_integrated_in_4pi_, number_of_time_steps_,
+		       "p_v2_proton_basic_integrated_in_4pi",
+		       1, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v2_proton_basic_integrated_at_mid_y_, number_of_time_steps_,
+		       "p_v2_proton_basic_integrated_at_mid_y",
+		       1, y_mid_min_, y_mid_max_, show_stats);
+    populate_TProfiles(p_v3_proton_basic_integrated_in_4pi_, number_of_time_steps_,
+		       "p_v3_proton_basic_integrated_in_4pi",
+		       1, y_min_, y_max_, show_stats);
+    populate_TProfiles(p_v3_proton_basic_integrated_at_mid_y_, number_of_time_steps_,
+		       "p_v3_proton_basic_integrated_at_mid_y",
+		       1, y_mid_min_, y_mid_max_, show_stats);
 
     // TO DO: make vectors with all time steps also for other flow calculations
 
@@ -552,112 +325,112 @@ class Flow {
       // Establish the bin center
       const double y_bin = y_min_ + (0.5 + i) * (y_max_ - y_min_)/y_number_of_bins_;
       //std::cout << "y_bin (center) = " << y_bin << std::endl;
-      // Establish the basic name
-      char basic_proton_name[Char_Array_Size];
-      snprintf(basic_proton_name, Char_Array_Size, "proton_basic_y_%.3f", y_bin);
+      // Establish the base name
+      char base_proton_name[Char_Array_Size];
+      snprintf(base_proton_name, Char_Array_Size, "proton_basic_y_%.3f", y_bin);
       // dvn_{coll}/dt:
-      populate_tgraphs(g_dv1coll_dt_proton_basic_, basic_proton_name, "g_dv1colldt_");
-      populate_tgraphs(g_dv2coll_dt_proton_basic_, basic_proton_name, "g_dv2colldt_");
-      populate_tgraphs(g_dv3coll_dt_proton_basic_, basic_proton_name, "g_dv3colldt_");
+      append_TGraphErrors(g_dv1coll_dt_proton_basic_, base_proton_name, "g_dv1colldt_");
+      append_TGraphErrors(g_dv2coll_dt_proton_basic_, base_proton_name, "g_dv2colldt_");
+      append_TGraphErrors(g_dv3coll_dt_proton_basic_, base_proton_name, "g_dv3colldt_");
       // dvn_{MF}/dt:
-      populate_tgraphs(g_dv1MF_dt_proton_basic_, basic_proton_name, "g_dv1MFdt_");
-      populate_tgraphs(g_dv2MF_dt_proton_basic_, basic_proton_name, "g_dv2MFdt_");
-      populate_tgraphs(g_dv3MF_dt_proton_basic_, basic_proton_name, "g_dv3MFdt_");
+      append_TGraphErrors(g_dv1MF_dt_proton_basic_, base_proton_name, "g_dv1MFdt_");
+      append_TGraphErrors(g_dv2MF_dt_proton_basic_, base_proton_name, "g_dv2MFdt_");
+      append_TGraphErrors(g_dv3MF_dt_proton_basic_, base_proton_name, "g_dv3MFdt_");
       // dvntotal/dt:
-      populate_tgraphs(g_dv1total_dt_proton_basic_, basic_proton_name, "g_dv1totaldt_");
-      populate_tgraphs(g_dv2total_dt_proton_basic_, basic_proton_name, "g_dv2totaldt_");
-      populate_tgraphs(g_dv3total_dt_proton_basic_, basic_proton_name, "g_dv3totaldt_");
+      append_TGraphErrors(g_dv1total_dt_proton_basic_, base_proton_name, "g_dv1totaldt_");
+      append_TGraphErrors(g_dv2total_dt_proton_basic_, base_proton_name, "g_dv2totaldt_");
+      append_TGraphErrors(g_dv3total_dt_proton_basic_, base_proton_name, "g_dv3totaldt_");
       // vn_{coll}(t):
-      populate_tgraphs(g_v1coll_proton_basic_, basic_proton_name, "g_v1coll_");
-      populate_tgraphs(g_v2coll_proton_basic_, basic_proton_name, "g_v2coll_");
-      populate_tgraphs(g_v3coll_proton_basic_, basic_proton_name, "g_v3coll_");;
+      append_TGraphErrors(g_v1coll_proton_basic_, base_proton_name, "g_v1coll_");
+      append_TGraphErrors(g_v2coll_proton_basic_, base_proton_name, "g_v2coll_");
+      append_TGraphErrors(g_v3coll_proton_basic_, base_proton_name, "g_v3coll_");;
       // vn_{MF}(t):
-      populate_tgraphs(g_v1MF_proton_basic_, basic_proton_name, "g_MFcoll_");
-      populate_tgraphs(g_v2MF_proton_basic_, basic_proton_name, "g_MFcoll_");
-      populate_tgraphs(g_v3MF_proton_basic_, basic_proton_name, "g_MFcoll_");
+      append_TGraphErrors(g_v1MF_proton_basic_, base_proton_name, "g_MFcoll_");
+      append_TGraphErrors(g_v2MF_proton_basic_, base_proton_name, "g_MFcoll_");
+      append_TGraphErrors(g_v3MF_proton_basic_, base_proton_name, "g_MFcoll_");
       // vntotal(t):
-      populate_tgraphs(g_v1total_proton_basic_, basic_proton_name, "g_totalcoll_");
-      populate_tgraphs(g_v2total_proton_basic_, basic_proton_name, "g_totalcoll_");
-      populate_tgraphs(g_v3total_proton_basic_, basic_proton_name, "g_totalcoll_");
+      append_TGraphErrors(g_v1total_proton_basic_, base_proton_name, "g_totalcoll_");
+      append_TGraphErrors(g_v2total_proton_basic_, base_proton_name, "g_totalcoll_");
+      append_TGraphErrors(g_v3total_proton_basic_, base_proton_name, "g_totalcoll_");
     }
     // Integrated in rapidity
     // dvn_{coll}/dt:
-    initialize_tgraph(g_dv1coll_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv1coll_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv1colldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv2coll_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv2coll_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv2colldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv3coll_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv3coll_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv3colldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv1coll_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv1coll_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv1colldt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv2coll_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv2coll_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv2colldt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv3coll_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv3coll_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv3colldt_integrated_at_mid_y_");
     // dvn_{MF}/dt:
-    initialize_tgraph(g_dv1MF_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv1MF_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv1MFdt_integrated_in_4pi_");
-    initialize_tgraph(g_dv2MF_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv2MF_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv2MFdt_integrated_in_4pi_");
-    initialize_tgraph(g_dv3MF_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv3MF_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv3MFdt_integrated_in_4pi_");
-    initialize_tgraph(g_dv1MF_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv1MF_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv1MFdt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv2MF_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv2MF_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv2MFdt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv3MF_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv3MF_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv3MFdt_integrated_at_mid_y_");
     // dvntotal/dt:
-    initialize_tgraph(g_dv1total_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv1total_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv1totaldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv2total_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv2total_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv2totaldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv3total_dt_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_dv3total_dt_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_dv3totaldt_integrated_in_4pi_");
-    initialize_tgraph(g_dv1total_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv1total_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv1totaldt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv2total_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv2total_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv2totaldt_integrated_at_mid_y_");
-    initialize_tgraph(g_dv3total_dt_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_dv3total_dt_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_dv3totaldt_integrated_at_mid_y_");
     // vn_{coll}(t):
-    initialize_tgraph(g_v1coll_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v1coll_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v1coll_integrated_in_4pi_");
-    initialize_tgraph(g_v2coll_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v2coll_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v2coll_integrated_in_4pi_");
-    initialize_tgraph(g_v3coll_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v3coll_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v3coll_integrated_in_4pi_");
-    initialize_tgraph(g_v1coll_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v1coll_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v1coll_integrated_at_mid_y_");
-    initialize_tgraph(g_v2coll_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v2coll_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v2coll_integrated_at_mid_y_");
-    initialize_tgraph(g_v3coll_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v3coll_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v3coll_integrated_at_mid_y_");
     // vn_{MF}(t):
-    initialize_tgraph(g_v1MF_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v1MF_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v1MF_integrated_in_4pi_");
-    initialize_tgraph(g_v2MF_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v2MF_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v2MF_integrated_in_4pi_");
-    initialize_tgraph(g_v3MF_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v3MF_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v3MF_integrated_in_4pi_");
-    initialize_tgraph(g_v1MF_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v1MF_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v1MF_integrated_at_mid_y_");
-    initialize_tgraph(g_v2MF_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v2MF_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v2MF_integrated_at_mid_y_");
-    initialize_tgraph(g_v3MF_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v3MF_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v3MF_integrated_at_mid_y_");
     // vntotal(t):
-    initialize_tgraph(g_v1total_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v1total_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v1total_integrated_in_4pi_");
-    initialize_tgraph(g_v2total_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v2total_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v2total_integrated_in_4pi_");
-    initialize_tgraph(g_v3total_proton_basic_integrated_in_4pi_,
+    initialize_TGraph(g_v3total_proton_basic_integrated_in_4pi_,
 		      "proton_basic_", "g_v3total_integrated_in_4pi_");
-    initialize_tgraph(g_v1total_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v1total_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v1total_integrated_at_mid_y_");
-    initialize_tgraph(g_v2total_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v2total_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v2total_integrated_at_mid_y_");
-    initialize_tgraph(g_v3total_proton_basic_integrated_at_mid_y_,
+    initialize_TGraph(g_v3total_proton_basic_integrated_at_mid_y_,
 		      "proton_basic_", "g_v3total_integrated_at_mid_y_");
   }
 
