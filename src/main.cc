@@ -11,7 +11,7 @@
 
 #include "./config.h"
 #include "./constants.h"
-#include "./flow.h"
+#include "./flow_basic.h"
 #include "./multiplicity.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
@@ -163,32 +163,32 @@ int main () {
 
       if (cfg.flow_only_at_final_output) {
 	// Only last time step
-	Flow flow_analysis(SMASH_cfg_info.Sqrtsnn(),
-			   cfg.flow_only_at_final_output, 1,
-			   cfg.flow_scale_by_beam_rapidity,
-			   cfg.flow_number_of_rapidity_bins,
-			   cfg.flow_y_min, cfg.flow_y_max,
-			   cfg.flow_y_mid_min, cfg.flow_y_mid_max,
-			   cfg.proton_pT_min, cfg.proton_pT_max,
-			   cfg.deuteron_pT_min, cfg.deuteron_pT_max,
-			   cfg.lambda_pT_min, cfg.lambda_pT_max,
-			   cfg.pion_pT_min, cfg.pion_pT_max,
-			   cfg.kaon_pT_min, cfg.kaon_pT_max);    
+	FlowBasic flow_analysis(SMASH_cfg_info.Sqrtsnn(),
+				cfg.flow_only_at_final_output, 1,
+				cfg.flow_scale_by_beam_rapidity,
+				cfg.flow_number_of_rapidity_bins,
+				cfg.flow_y_min, cfg.flow_y_max,
+				cfg.flow_y_mid_min, cfg.flow_y_mid_max,
+				cfg.proton_pT_min, cfg.proton_pT_max,
+				cfg.deuteron_pT_min, cfg.deuteron_pT_max,
+				cfg.lambda_pT_min, cfg.lambda_pT_max,
+				cfg.pion_pT_min, cfg.pion_pT_max,
+				cfg.kaon_pT_min, cfg.kaon_pT_max);    
 	flow_analysis.basic_flow(ROOT_file, SMASH_cfg_info, cfg);
       } else {
 	// All time steps, with chosen output times for recording the results of time
 	// evolution analysis
-	Flow flow_analysis(SMASH_cfg_info.Sqrtsnn(),
-			   cfg.flow_only_at_final_output, ROOT_file->n_event_time_steps(),
-			   cfg.flow_scale_by_beam_rapidity,
-			   cfg.flow_number_of_rapidity_bins,
-			   cfg.flow_y_min, cfg.flow_y_max,
-			   cfg.flow_y_mid_min, cfg.flow_y_mid_max,
-			   cfg.proton_pT_min, cfg.proton_pT_max,
-			   cfg.deuteron_pT_min, cfg.deuteron_pT_max,
-			   cfg.lambda_pT_min, cfg.lambda_pT_max,
-			   cfg.pion_pT_min, cfg.pion_pT_max,
-			   cfg.kaon_pT_min, cfg.kaon_pT_max);    
+	FlowBasic flow_analysis(SMASH_cfg_info.Sqrtsnn(),
+				cfg.flow_only_at_final_output, ROOT_file->n_event_time_steps(),
+				cfg.flow_scale_by_beam_rapidity,
+				cfg.flow_number_of_rapidity_bins,
+				cfg.flow_y_min, cfg.flow_y_max,
+				cfg.flow_y_mid_min, cfg.flow_y_mid_max,
+				cfg.proton_pT_min, cfg.proton_pT_max,
+				cfg.deuteron_pT_min, cfg.deuteron_pT_max,
+				cfg.lambda_pT_min, cfg.lambda_pT_max,
+				cfg.pion_pT_min, cfg.pion_pT_max,
+				cfg.kaon_pT_min, cfg.kaon_pT_max);    
 	flow_analysis.basic_flow(ROOT_file, SMASH_cfg_info, cfg, cfg.flow_output_times);
 
 	flow_analysis.basic_flow_time_evolution_binned_in_y(ROOT_file, cfg);

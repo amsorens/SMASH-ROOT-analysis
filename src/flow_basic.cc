@@ -7,7 +7,7 @@
 // This class is used to calculate collective flow.
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#include "./flow.h"
+#include "./flow_basic.h"
 
 #include <fstream>
 #include <iostream>
@@ -28,7 +28,7 @@
 
 
 
-void Flow::fill_N_vs_y
+void FlowBasic::fill_N_vs_y
   (double p_0, double p_x, double p_y, double p_z,
    // pass by reference to avoid copy; const to avoid changes
    const std::unique_ptr<TH1D>& N_histogram,
@@ -51,7 +51,7 @@ void Flow::fill_N_vs_y
 
 
 
-void Flow::fill_v1_v2_v3
+void FlowBasic::fill_v1_v2_v3
   (double p_0, double p_x, double p_y, double p_z,
    // pass by reference to avoid copy; const to avoid changes
    const std::unique_ptr<TProfile>& v1_profile_histogram,
@@ -83,7 +83,7 @@ void Flow::fill_v1_v2_v3
 
 
 
-void Flow::fill_integrated_v1_v2_v3
+void FlowBasic::fill_integrated_v1_v2_v3
   (double p_0, double p_x, double p_y, double p_z,
    // pass by reference to avoid copy; const to avoid changes
    const std::unique_ptr<TProfile>& v1_profile_histogram,
@@ -116,7 +116,7 @@ void Flow::fill_integrated_v1_v2_v3
 
 
 
-void Flow::fit_v1_v2_v3_make_plots_save_fit_data
+void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // pass by reference to avoid copy; const to avoid changes
   (const std::unique_ptr<TProfile>& p_v1,
    const std::unique_ptr<TProfile>& p_v2,
@@ -745,7 +745,7 @@ void Flow::fit_v1_v2_v3_make_plots_save_fit_data
 
 
 
-void Flow::save_flow_vs_rapidity_data
+void FlowBasic::save_flow_vs_rapidity_data
   // pass by reference to avoid copy; const to avoid changes
   (const std::unique_ptr<TProfile>& p_v1_proton,
    const std::unique_ptr<TProfile>& p_v1_deuteron,
@@ -901,7 +901,7 @@ void Flow::save_flow_vs_rapidity_data
 
 
 
-void Flow::save_yield_data
+void FlowBasic::save_yield_data
   // pass by reference to avoid copy; const to avoid changes
   (const std::vector<int>& proton_count,
    const std::vector<int>& deuteron_count,
@@ -1047,7 +1047,7 @@ void Flow::save_yield_data
 
 
 
-void Flow::plot_and_save_flow_time_evolution_data
+void FlowBasic::plot_and_save_flow_time_evolution_data
   // pass by reference to avoid copy; const to avoid changes
   (const std::unique_ptr<TGraphErrors>& g_coll,
    const std::unique_ptr<TGraphErrors>& g_MF,
@@ -1345,7 +1345,7 @@ void Flow::plot_and_save_flow_time_evolution_data
 
 
 
-void Flow::basic_flow
+void FlowBasic::basic_flow
   (const std::unique_ptr<ReadParticles>& ROOT_file, SMASHConfigInfo config_info,
    Config cfg, std::set<double> output_times)
 {
@@ -1810,7 +1810,7 @@ void Flow::basic_flow
 
 
 
-void Flow::basic_flow_time_evolution_binned_in_y
+void FlowBasic::basic_flow_time_evolution_binned_in_y
   (const std::unique_ptr<ReadParticles>& ROOT_file, Config cfg) {
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -2176,7 +2176,7 @@ void Flow::basic_flow_time_evolution_binned_in_y
 
 
 
-void Flow::basic_flow_time_evolution_in_4pi_and_at_mid_y
+void FlowBasic::basic_flow_time_evolution_in_4pi_and_at_mid_y
   (const std::unique_ptr<ReadParticles>& ROOT_file, Config cfg) {
 
   ////////////////////////////////////////////////////////////////////////////////////////

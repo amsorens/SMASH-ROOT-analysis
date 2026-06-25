@@ -7,8 +7,8 @@
 // This class is used to calculate collective flow.
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SMASH_ROOT_ANALYSIS_FLOW_H
-#define SMASH_ROOT_ANALYSIS_FLOW_H
+#ifndef SMASH_ROOT_ANALYSIS_FLOW_BASIC_H
+#define SMASH_ROOT_ANALYSIS_FLOW_BASIC_H
 
 #include <iostream>
 #include <memory>
@@ -90,55 +90,53 @@ inline void append_TGraphErrors
 
 
 
-class Flow {
+class FlowBasic {
  public:
   ////////////////////////////////////////////////////////////////////////////////////////
-  // Default constructor, "implemented" here in the .h file
-  // We provide default values of the number of bins and spread in rapidity y for the
-  // TProfile histograms, as well as the default value of bool for displaying stats
-  Flow(double sqrts,
-       //////////////////////////////////////
-       // Time evolution of flow:
-       bool only_flow_at_final_output,
-       int number_of_time_steps,
-       //////////////////////////////////////
-       // Rapidity coverage:
-       bool scale_by_beam_rapidity,
-       int y_number_of_bins,	       
-       double y_min,
-       double y_max,
-       //////////////////////////////////////
-       // Coverage for quantities integrated at midrapidity:
-       double y_mid_min,
-       double y_mid_max,
-       //////////////////////////////////////
-       // Transverse momentum pT cuts:
-       double proton_pT_min,
-       double proton_pT_max,
-       double deuteron_pT_min,
-       double deuteron_pT_max,
-       double lambda_pT_min,
-       double lambda_pT_max,
-       double pion_pT_min,
-       double pion_pT_max,
-       double kaon_pT_min,
-       double kaon_pT_max,
-       //////////////////////////////////////
-       // Plotting parameters:
-       bool show_stats = false,
-       bool user_axes_ranges = true,
-       // Plotting parameters; weird default values are updated in the constructor:
-       double x_axis_lower = -100.0,
-       double x_axis_upper  = -100.0,
-       double v1_y_axis_lower = -100.0,
-       double v1_y_axis_upper = - 100.0,
-       double v2_y_axis_lower = -100.0,
-       double v2_y_axis_upper = -100.0,
-       double v3_y_axis_lower = -100.0,
-       double v3_y_axis_upper = -100.0,
-       double fitting_range = -100.0)
-    // Explicit initialization of const terms (terms are initialized in the order of
-    // declaration in the class definition, regardless of the order of appearance here):
+  // Default constructor
+  FlowBasic(double sqrts,
+	    //////////////////////////////////////
+	    // Time evolution of flow:
+	    bool only_flow_at_final_output,
+	    int number_of_time_steps,
+	    //////////////////////////////////////
+	    // Rapidity coverage:
+	    bool scale_by_beam_rapidity,
+	    int y_number_of_bins,	       
+	    double y_min,
+	    double y_max,
+	    //////////////////////////////////////
+	    // Coverage for quantities integrated at midrapidity:
+	    double y_mid_min,
+	    double y_mid_max,
+	    //////////////////////////////////////
+	    // Transverse momentum pT cuts:
+	    double proton_pT_min,
+	    double proton_pT_max,
+	    double deuteron_pT_min,
+	    double deuteron_pT_max,
+	    double lambda_pT_min,
+	    double lambda_pT_max,
+	    double pion_pT_min,
+	    double pion_pT_max,
+	    double kaon_pT_min,
+	    double kaon_pT_max,
+	    //////////////////////////////////////
+	    // Plotting parameters:
+	    bool show_stats = false,
+	    bool user_axes_ranges = true,
+	    // Plotting parameters; weird default values are updated in the constructor:
+	    double x_axis_lower = -100.0,
+	    double x_axis_upper  = -100.0,
+	    double v1_y_axis_lower = -100.0,
+	    double v1_y_axis_upper = - 100.0,
+	    double v2_y_axis_lower = -100.0,
+	    double v2_y_axis_upper = -100.0,
+	    double v3_y_axis_lower = -100.0,
+	    double v3_y_axis_upper = -100.0,
+	    double fitting_range = -100.0)
+  // Explicit initialization of const terms (terms are initialized in the order of
+  // declaration in the class definition, regardless of the order of appearance here):
     : sqrts_(sqrts),
       Ekin_( Ekin_from_sqrts(sqrts_) ),
       y_beam_( y_beam_cm(sqrts_) ),
@@ -435,7 +433,7 @@ class Flow {
   }
 
   // Default destructor
-  virtual ~Flow() {}
+  virtual ~FlowBasic() {}
 
 
   
@@ -764,8 +762,8 @@ class Flow {
   ////////////////////////////////////////////////////////////////////////////////////////
   // Handling data:
   // name of optional directory to store some of the results in
-  const char flow_directory_name_[Char_Array_Size] = "flow_plots/";
-  const char flow_evolution_directory_name_[Char_Array_Size] = "flow_evolution/";
+  const char flow_directory_name_[Char_Array_Size] = "flow_basic_plots/";
+  const char flow_evolution_directory_name_[Char_Array_Size] = "flow_basic_evolution/";
 };
 
 #endif
