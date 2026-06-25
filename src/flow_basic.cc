@@ -1453,7 +1453,7 @@ void FlowBasic::basic_flow
 	// protons
       case 2212: {
 	// count protons
-	//proton_count[time_step_index]++;
+	proton_count[time_step_index]++;
 	// add to N vs. y histograms
 	fill_N_vs_y(ROOT_file->p0[index],
 		    ROOT_file->px[index], ROOT_file->py[index], ROOT_file->pz[index],
