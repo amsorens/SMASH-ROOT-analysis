@@ -774,23 +774,6 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Identify the directory
   char Flow_data_directory[Char_Array_Size];
   snprintf(Flow_data_directory, Char_Array_Size, "%s", Target_Directory);
-  
-  // Identify the type of analysis (any p_v1 will do, we use proton)
-  std::string name(p_v1_proton->GetName());
-  // Step 1: Remove trailing "_number" if it exists
-  size_t last_underscore = name.find_last_of('_');
-  bool has_number_suffix =
-    (last_underscore != std::string::npos &&
-     last_underscore + 1 < name.size() &&
-     std::all_of(name.begin() + last_underscore + 1, name.end(),::isdigit));
-  std::string trimmed = has_number_suffix ? name.substr(0, last_underscore) : name;
-  // Step 2: Extract word after the last underscore (this is the analysis type)
-  size_t analysis_underscore = trimmed.find_last_of('_');
-  if (analysis_underscore == std::string::npos) {
-    throw std::runtime_error("Expected at least one underscore in histogram name.");
-  }
-  std::string analysis_type = trimmed.substr(analysis_underscore + 1);
-  
   // Read off whether flow data is scaled by rapidity
   char scale_by_ybeam_info[Char_Array_Size];
   if ( scale_by_beam_rapidity_ ) {
@@ -798,17 +781,61 @@ void FlowBasic::save_flow_vs_rapidity_data
   } else {
     snprintf(scale_by_ybeam_info, Char_Array_Size, "scaled_rapidity=false");
   }
-  // Put all data file name info together
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Put all data file name info together; do this for 3 files with increasing complexity:
+  ///////////////////////////////////////////
+  // Proton flow only
+  char Flow_data_proton_file_name[Char_Array_Size];
+  snprintf(Flow_data_proton_file_name, Char_Array_Size,
+	   "%s00_flow_basic_proton_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+  FILE *Flow_data_proton;
+  Flow_data_proton = fopen(Flow_data_proton_file_name, "w");
+  // Add header
+  std::fprintf(Flow_data_proton, "# Flow data                \n#\n"
+	       "# impact parameter range = %s fm \n"
+	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n#\n",
+	       impact_parameter_range_or_value, proton_pT_min_, proton_pT_max_);
+  // Add column labels
+  std::fprintf(Flow_data_proton, "#y           "
+	       "v1 p        +-          v2 p        +-          v3 p        +-          "
+	       "\n#\n");
+  
+  ///////////////////////////////////////////
+  // Abbreviated: only non-strange particles (4 species)
+  char Flow_data_nonstrange_file_name[Char_Array_Size];
+  snprintf(Flow_data_nonstrange_file_name, Char_Array_Size,
+	   "%s00_flow_basic_nonstrange_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+  FILE *Flow_data_nonstrange;
+  Flow_data_nonstrange = fopen(Flow_data_nonstrange_file_name, "w");
+  // Add header
+  std::fprintf(Flow_data_nonstrange, "# Flow data                \n#\n"
+	       "# impact parameter range = %s fm \n"
+	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n"
+	       "# deuteron pTmin = %3.2f, pTmax = %3.2f \n"
+	       "#     pion pTmin = %3.2f, pTmax = %3.2f \n#\n",
+	       impact_parameter_range_or_value,
+	       proton_pT_min_, proton_pT_max_, deuteron_pT_min_, deuteron_pT_max_,
+	       pion_pT_min_, pion_pT_max_);
+  // Add column labels
+  std::fprintf(Flow_data_nonstrange, "#y           "
+	       "v1 p        +-          v2 p        +-          v3 p        +-          "
+	       "v1 deuteron +-          v2 deuteron +-          v3 deuteron +-          "
+	       "v1 pi plus  +-          v2 pi plus  +-          v3 pi plus  +-          "
+	       "v1 pi minus +-          v2 pi minus +-          v3 pi minus +-          "
+	       "\n#\n");
+  
+  ///////////////////////////////////////////
+  // Full info (7 species)
   char Flow_data_full_file_name[Char_Array_Size];
   snprintf(Flow_data_full_file_name, Char_Array_Size,
-	   "%s00_flow_data_v1_v2_v3_%s_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
-	   Flow_data_directory, analysis_type.c_str(), sqrts_, n_events, time,
-	   scale_by_ybeam_info);
-  FILE *Flow_data;
-  Flow_data = fopen(Flow_data_full_file_name, "w");
-
+	   "%s00_flow_basic_all_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+  FILE *Flow_data_full;
+  Flow_data_full = fopen(Flow_data_full_file_name, "w");
   // Add header
-  std::fprintf(Flow_data, "# Flow data                \n#\n"
+  std::fprintf(Flow_data_full, "# Flow data                \n#\n"
 	       "# impact parameter range = %s fm \n"
 	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n"
 	       "# deuteron pTmin = %3.2f, pTmax = %3.2f \n"
@@ -819,9 +846,8 @@ void FlowBasic::save_flow_vs_rapidity_data
 	       proton_pT_min_, proton_pT_max_, deuteron_pT_min_, deuteron_pT_max_,
 	       lambda_pT_min_, lambda_pT_max_, pion_pT_min_, pion_pT_max_,
 	       kaon_pT_min_, kaon_pT_max_);
-
   // Add column labels
-  std::fprintf(Flow_data, "#y           "
+  std::fprintf(Flow_data_full, "#y           "
 	       "v1 p        +-          v2 p        +-          v3 p        +-          "
 	       "v1 deuteron +-          v2 deuteron +-          v3 deuteron +-          "
 	       "v1 Lambda   +-          v2 Lambda   +-          v3 Lambda   +-          "
@@ -864,7 +890,33 @@ void FlowBasic::save_flow_vs_rapidity_data
     std::pair<double, double> v2_K_minus = bin_value_and_error(p_v2_kaon_minus, i);
     std::pair<double, double> v3_K_minus = bin_value_and_error(p_v3_kaon_minus, i);
 
-    std::fprintf(Flow_data, "%8.6f    "
+    std::fprintf(Flow_data_proton, "%8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    \n",
+		 y_r,
+		 v1_proton.first, v1_proton.second,
+		 v2_proton.first, v2_proton.second,
+		 v3_proton.first, v3_proton.second);
+    
+    std::fprintf(Flow_data_nonstrange, "%8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    \n",
+		 y_r,
+		 v1_proton.first, v1_proton.second,
+		 v2_proton.first, v2_proton.second,
+		 v3_proton.first, v3_proton.second,
+		 v1_deuteron.first, v1_deuteron.second,
+		 v2_deuteron.first, v2_deuteron.second,
+		 v3_deuteron.first, v3_deuteron.second,
+		 v1_pi_plus.first, v1_pi_plus.second,
+		 v2_pi_plus.first, v2_pi_plus.second,
+		 v3_pi_plus.first, v3_pi_plus.second,
+		 v1_pi_minus.first, v1_pi_minus.second,
+		 v2_pi_minus.first, v2_pi_minus.second,
+		 v3_pi_minus.first, v3_pi_minus.second);
+
+    std::fprintf(Flow_data_full, "%8.6f    "
 		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
 		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
 		 "%8.6f    %8.6f    %8.6f    %8.6f    %8.6f    %8.6f    "
@@ -896,7 +948,7 @@ void FlowBasic::save_flow_vs_rapidity_data
 		 v3_K_minus.first, v3_K_minus.second);    
   }
 
-  fclose(Flow_data);
+  fclose(Flow_data_full);
 }
 
 
@@ -920,28 +972,11 @@ void FlowBasic::save_yield_data
   // Identify the directory
   char Yield_data_directory[Char_Array_Size];
   snprintf(Yield_data_directory, Char_Array_Size, "%s", Target_Directory);
-
-  // Identify the type of analysis (any p_v1 will do, we use proton)
-  std::string name(p_v1_proton->GetName());
-  // Step 1: Remove trailing "_number" if it exists
-  size_t last_underscore = name.find_last_of('_');
-  bool has_number_suffix =
-    (last_underscore != std::string::npos &&
-     last_underscore + 1 < name.size() &&
-     std::all_of(name.begin() + last_underscore + 1, name.end(),::isdigit));
-  std::string trimmed = has_number_suffix ? name.substr(0, last_underscore) : name;
-  // Step 2: Extract word after the last underscore (this is the analysis type)
-  size_t analysis_underscore = trimmed.find_last_of('_');
-  if (analysis_underscore == std::string::npos) {
-    throw std::runtime_error("Expected at least one underscore in histogram name.");
-  }
-  std::string analysis_type = trimmed.substr(analysis_underscore + 1);
-  
   // Put all data file name info together
   char Yield_data_full_file_name[Char_Array_Size];
   snprintf(Yield_data_full_file_name, Char_Array_Size,
-	   "%s00_yield_data_from_%s_flow_analysis_sqrts=%.2f_nEvents=%d.txt",
-	   Yield_data_directory, analysis_type.c_str(), sqrts_, n_events);
+	   "%s00_yield_data_from_basic_flow_analysis_sqrts=%.2f_nEvents=%d.txt",
+	   Yield_data_directory, sqrts_, n_events);
   FILE *Yield_data;
   Yield_data = fopen(Yield_data_full_file_name, "w");
   
