@@ -797,7 +797,7 @@ void FlowBasic::save_flow_vs_rapidity_data
 	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n#\n",
 	       impact_parameter_range_or_value, proton_pT_min_, proton_pT_max_);
   // Add column labels
-  std::fprintf(Flow_data_proton, "#y           "
+  std::fprintf(Flow_data_proton, "# y          "
 	       "v1 p        +-          v2 p        +-          v3 p        +-          "
 	       "\n#\n");
   
@@ -819,7 +819,7 @@ void FlowBasic::save_flow_vs_rapidity_data
 	       proton_pT_min_, proton_pT_max_, deuteron_pT_min_, deuteron_pT_max_,
 	       pion_pT_min_, pion_pT_max_);
   // Add column labels
-  std::fprintf(Flow_data_nonstrange, "#y           "
+  std::fprintf(Flow_data_nonstrange, "# y          "
 	       "v1 p        +-          v2 p        +-          v3 p        +-          "
 	       "v1 deuteron +-          v2 deuteron +-          v3 deuteron +-          "
 	       "v1 pi plus  +-          v2 pi plus  +-          v3 pi plus  +-          "
@@ -847,7 +847,7 @@ void FlowBasic::save_flow_vs_rapidity_data
 	       lambda_pT_min_, lambda_pT_max_, pion_pT_min_, pion_pT_max_,
 	       kaon_pT_min_, kaon_pT_max_);
   // Add column labels
-  std::fprintf(Flow_data_full, "#y           "
+  std::fprintf(Flow_data_full, "# y          "
 	       "v1 p        +-          v2 p        +-          v3 p        +-          "
 	       "v1 deuteron +-          v2 deuteron +-          v3 deuteron +-          "
 	       "v1 Lambda   +-          v2 Lambda   +-          v3 Lambda   +-          "
@@ -864,9 +864,9 @@ void FlowBasic::save_flow_vs_rapidity_data
   // note: TProfile indices start at 1
   for (int i = 1; i < (y_number_of_bins_ + 1); i++){
     // the bin number is the same for all cases
-    const int bin_number_proton_v1 = p_v1_proton->GetBin(i);
+    const int bin_number = p_v1_proton->GetBin(i);
     // the rapidity is the same for all cases
-    const double y_r = p_v1_proton->GetBinCenter(bin_number_proton_v1);
+    const double y_r = p_v1_proton->GetBinCenter(bin_number);
 
     std::pair<double, double> v1_proton = bin_value_and_error(p_v1_proton, i);
     std::pair<double, double> v2_proton = bin_value_and_error(p_v2_proton, i);
@@ -975,7 +975,7 @@ void FlowBasic::save_yield_data
   // Put all data file name info together
   char Yield_data_full_file_name[Char_Array_Size];
   snprintf(Yield_data_full_file_name, Char_Array_Size,
-	   "%s00_yield_data_from_basic_flow_analysis_sqrts=%.2f_nEvents=%d.txt",
+	   "%s00_flow_yield_data_from_basic_flow_analysis_sqrts=%.2f_nEvents=%d.txt",
 	   Yield_data_directory, sqrts_, n_events);
   FILE *Yield_data;
   Yield_data = fopen(Yield_data_full_file_name, "w");

@@ -403,7 +403,8 @@ void Yields::get_dN_dy
     if ( std::abs(N_proton[i] - n_protons_0pointX_per_event[i]) > epsilon ) {
       std::ostringstream oss;
       oss << "Fatal error: N_proton[" << i << "] = " << N_proton[i] << ", "
-	  << "n_protons_0point" << i << "_per_event = " << n_protons_0pointX_per_event[i]
+	  << "n_protons_0point" << i+1 << "_per_event = "
+	  << n_protons_0pointX_per_event[i]
 	  << ".\nThese should be equal (tested precision: " << epsilon << ").";
       throw std::runtime_error(oss.str());
     }
@@ -454,8 +455,8 @@ void Yields::get_dN_dy
     // Establish the file name
     char yields_file_name[Char_Array_Size];
     snprintf(yields_file_name, Char_Array_Size,
-	     "%s00_yields_rapidity_dependence_sqrts=%.2f_Deltay=%2.1f_nEvents=%d.txt",
-	     Target_Directory, sqrts_, rapidity_bin_widths[i], N_events_);
+	     "%s00_yields_in_rapidity_bins_sqrts=%.2f_Deltay=%2.1f_nEvents=%d.txt",
+	     Target_Directory, sqrts_, 2.0 * rapidity_bin_widths[i], N_events_);
     // Open the file
     Yields_data[i] = fopen(yields_file_name, "w");
   
@@ -513,15 +514,15 @@ void Yields::get_dN_dy
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // Divide all histograms by the bin width to obtain dN/dy vs. y
-  h_proton_dN_dy_.Scale(1.0/y_bin_width_);
-  h_antiproton_dN_dy_.Scale(1.0/y_bin_width_);
-  h_lambda_dN_dy_.Scale(1.0/y_bin_width_);
-  h_antilambda_dN_dy_.Scale(1.0/y_bin_width_);
-  h_pi_plus_dN_dy_.Scale(1.0/y_bin_width_);
-  h_pi_minus_dN_dy_.Scale(1.0/y_bin_width_);
-  h_kaon_plus_dN_dy_.Scale(1.0/y_bin_width_);
-  h_kaon_minus_dN_dy_.Scale(1.0/y_bin_width_);
-  h_phi_dN_dy_.Scale(1.0/y_bin_width_);
+  h_proton_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_antiproton_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_lambda_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_antilambda_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_pi_plus_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_pi_minus_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_kaon_plus_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_kaon_minus_dN_dy_.Scale(1.0 / y_bin_width_);
+  h_phi_dN_dy_.Scale(1.0 / y_bin_width_);
 
 
   
@@ -538,7 +539,7 @@ void Yields::get_dN_dy
   plot_and_save_1D_histogram_wrapper(&h_pi_plus_dN_dy_,
 				     "rapidity y", "dN_{#pi^{+}}/dy", "h");
   plot_and_save_1D_histogram_wrapper(&h_pi_minus_dN_dy_,
-				     "rapidity y", "dN_{#pi^{0}}/dy", "h");
+				     "rapidity y", "dN_{#pi^{-}}/dy", "h");
   plot_and_save_1D_histogram_wrapper(&h_kaon_plus_dN_dy_,
 				     "rapidity y", "dN_{K^{+}}/dy", "h");
   plot_and_save_1D_histogram_wrapper(&h_kaon_minus_dN_dy_,
@@ -546,6 +547,134 @@ void Yields::get_dN_dy
   plot_and_save_1D_histogram_wrapper(&h_phi_dN_dy_,
 				     "rapidity y", "dN_{#phi}/dy", "h");
 
+  
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Save the raw dN/dy data; do this for 3 files with increasing complexity:
+  ///////////////////////////////////////////
+  // Proton yield only
+  char dNdy_data_proton_file_name[Char_Array_Size];
+  snprintf(dNdy_data_proton_file_name, sizeof(dNdy_data_proton_file_name),
+	   "%s00_yields_dNdy_proton_sqrts=%.2f_nEvents=%d.txt",
+	   Target_Directory, sqrts_, N_events_);
+  // Open the file
+  FILE *dNdy_data_proton;
+  dNdy_data_proton = fopen(dNdy_data_proton_file_name, "w");
+  // Add header
+  std::fprintf(dNdy_data_proton, "# dN/dy data \n#\n"
+	       "#   proton pT min = %3.2f\n#\n",
+	       proton_pT_min_);
+  // Add column labels
+  std::fprintf(dNdy_data_proton, "# y          "
+	       "proton      +-          antiproton  +-          "
+	       "\n#\n");
+
+  ///////////////////////////////////////////
+  // Abbreviated: only non-strange particles (4 species)
+  char dNdy_data_nonstrange_file_name[Char_Array_Size];
+  snprintf(dNdy_data_nonstrange_file_name, sizeof(dNdy_data_nonstrange_file_name),
+	   "%s00_yields_dNdy_nonstrange_sqrts=%.2f_nEvents=%d.txt",
+	   Target_Directory, sqrts_, N_events_);
+  // Open the file
+  FILE *dNdy_data_nonstrange;
+  dNdy_data_nonstrange = fopen(dNdy_data_nonstrange_file_name, "w");
+
+  // Add header
+  std::fprintf(dNdy_data_nonstrange, "# dN/dy data \n#\n"
+	       "#   proton pT min = %3.2f\n"
+	       "#     pion pT min = %3.2f\n#\n",
+	       proton_pT_min_, pi_pT_min_);
+  // Add column labels
+  std::fprintf(dNdy_data_nonstrange, "# y          "
+	       "proton      +-          antiproton  +-          "
+	       "pi plus     +-          pi minus    +-          "
+	       "\n#\n");
+
+  ///////////////////////////////////////////
+  // Full info (9 species)
+  char dNdy_data_file_name[Char_Array_Size];
+  snprintf(dNdy_data_file_name, sizeof(dNdy_data_file_name),
+	   "%s00_yields_dNdy_sqrts=%.2f_nEvents=%d.txt",
+	   Target_Directory, sqrts_, N_events_);
+  // Open the file
+  FILE *dNdy_data;
+  dNdy_data = fopen(dNdy_data_file_name, "w");
+
+  // Add header
+  std::fprintf(dNdy_data, "# dN/dy data \n#\n"
+	       "#   proton pT min = %3.2f\n"
+	       "#   Lambda pT min = %3.2f\n"
+	       "#     pion pT min = %3.2f\n"
+	       "#     kaon pT min = %3.2f\n"
+	       "#      phi pT min = %3.2f\n#\n",
+	       proton_pT_min_, lambda_pT_min_, pi_pT_min_, kaon_pT_min_, phi_pT_min_);
+  // Add column labels
+  std::fprintf(dNdy_data, "# y          "
+	       "proton      +-          antiproton  +-          "
+	       "lambda      +-          antilambda  +-          "
+	       "pi plus     +-          pi minus    +-          "
+	       "K+          +-          K-          +-          "
+	       "phi         +-          \n#\n");
+
+
+  
+  // Write data
+  // note: TH1D indices start at 1
+  for (int i = 1; i < (n_of_h_bins_ + 1); i++) {
+    // the bin number is the same for all cases
+    const int bin_number = h_proton_dN_dy_.GetBin(i);
+    // the rapidity is the same for all cases
+    const double y_r = h_proton_dN_dy_.GetBinCenter(bin_number);
+    
+    const double dNdy_p = h_proton_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_p_err = h_proton_dN_dy_.GetBinError(bin_number);
+    const double dNdy_antip = h_antiproton_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_antip_err = h_antiproton_dN_dy_.GetBinError(bin_number);
+    const double dNdy_lambda = h_lambda_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_lambda_err = h_lambda_dN_dy_.GetBinError(bin_number);
+    const double dNdy_antilambda = h_antilambda_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_antilambda_err = h_antilambda_dN_dy_.GetBinError(bin_number);
+    const double dNdy_pi_plus = h_pi_plus_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_pi_plus_err = h_pi_plus_dN_dy_.GetBinError(bin_number);
+    const double dNdy_pi_minus = h_pi_minus_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_pi_minus_err = h_pi_minus_dN_dy_.GetBinError(bin_number);
+    const double dNdy_kaon_plus = h_kaon_plus_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_kaon_plus_err = h_kaon_plus_dN_dy_.GetBinError(bin_number);
+    const double dNdy_kaon_minus = h_kaon_minus_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_kaon_minus_err = h_kaon_minus_dN_dy_.GetBinError(bin_number);
+    const double dNdy_phi = h_phi_dN_dy_.GetBinContent(bin_number);
+    const double dNdy_phi_err = h_phi_dN_dy_.GetBinError(bin_number);
+
+    std::fprintf(dNdy_data_proton, "%8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    \n",
+		 y_r,
+		 dNdy_p, dNdy_p_err, dNdy_antip, dNdy_antip_err);
+
+    std::fprintf(dNdy_data_nonstrange, "%8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    \n",
+		 y_r,
+		 dNdy_p, dNdy_p_err, dNdy_antip, dNdy_antip_err,
+		 dNdy_pi_plus, dNdy_pi_plus_err, dNdy_pi_minus, dNdy_pi_minus_err);
+  
+    std::fprintf(dNdy_data, "%8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    %8.6f    %8.6f    "
+		 "%8.6f    %8.6f    \n",
+		 y_r,
+		 dNdy_p, dNdy_p_err, dNdy_antip, dNdy_antip_err,
+		 dNdy_lambda, dNdy_lambda_err, dNdy_antilambda, dNdy_antilambda_err,
+		 dNdy_pi_plus, dNdy_pi_plus_err, dNdy_pi_minus, dNdy_pi_minus_err,
+		 dNdy_kaon_plus, dNdy_kaon_plus_err, dNdy_kaon_minus, dNdy_kaon_minus_err,
+		 dNdy_phi, dNdy_phi_err);
+  }
+
+  fclose(dNdy_data_proton);
+  fclose(dNdy_data_nonstrange);
+  fclose(dNdy_data);
+  
 
   
   ////////////////////////////////////////////////////////////////////////////////////////
