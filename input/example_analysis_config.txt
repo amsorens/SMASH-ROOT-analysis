@@ -34,5 +34,8 @@ Yields_phi_pT_min: 0.0
 Flow_basic: true
 Flow_only_at_final_output: true
 Flow_default_pT_cuts_STAR_FXT: true
-
-
+# If excluded species are not provided, all Ncharged are used
+Flow_centrality_percentage_min: 10
+Flow_centrality_percentage_max: 40
+Flow_centrality_Ncharged_min: 2040
+Flow_centrality_Ncharged_max: 9773

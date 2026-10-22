@@ -22,7 +22,9 @@
 #include <TProfile.h>
 
 #include "./basic_functions.h"
+#include "./centrality.h"
 #include "./config.h"
+#include "./range.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
 
@@ -110,6 +112,19 @@ class FlowBasic {
 	    double y_mid_min,
 	    double y_mid_max,
 	    //////////////////////////////////////
+	    // Multiplicity cuts:
+	    std::unordered_set<int> centrality_excluded_species,
+	    double centrality_percentage_min,
+	    double centrality_percentage_max,
+	    int centrality_Ncharged_min,
+	    int centrality_Ncharged_max,
+	    // NOTE: values from the multiplicity section of the config are reused here
+	    bool FXT_frame,
+	    double eta_min,
+	    double eta_max,
+	    double pT_min,
+	    double pT_max,
+	    //////////////////////////////////////
 	    // Transverse momentum pT cuts:
 	    double proton_pT_min,
 	    double proton_pT_max,
@@ -127,9 +142,9 @@ class FlowBasic {
 	    bool user_axes_ranges = true,
 	    // Plotting parameters; weird default values are updated in the constructor:
 	    double x_axis_lower = -100.0,
-	    double x_axis_upper  = -100.0,
+	    double x_axis_upper = -100.0,
 	    double v1_y_axis_lower = -100.0,
-	    double v1_y_axis_upper = - 100.0,
+	    double v1_y_axis_upper = -100.0,
 	    double v2_y_axis_lower = -100.0,
 	    double v2_y_axis_upper = -100.0,
 	    double v3_y_axis_lower = -100.0,
@@ -140,6 +155,7 @@ class FlowBasic {
     : sqrts_(sqrts),
       Ekin_( Ekin_from_sqrts(sqrts_) ),
       y_beam_( y_beam_cm(sqrts_) ),
+      v_beam_( v_beam_cm(sqrts_) ),
       ///////////////////////////////////////
       // Time evolution of flow:
       only_flow_at_final_output_(only_flow_at_final_output),
@@ -155,6 +171,15 @@ class FlowBasic {
       y_max_(y_max),
       y_mid_min_(y_mid_min),
       y_mid_max_(y_mid_max),
+      //////////////////////////////////////
+      // Multiplicity cuts:
+      centrality_excluded_species_(centrality_excluded_species),
+      centrality_(centrality_percentage_min, centrality_percentage_max,
+		  centrality_Ncharged_min, centrality_Ncharged_max),
+      apply_centrality_cut_(centrality_.Ncharged_max() > 0),
+      FXT_frame_(FXT_frame),
+      eta_(Range<double>(eta_min, eta_max)),
+      pT_(Range<double>(pT_min, pT_max)),
       ///////////////////////////////////////
       // pT cuts:      
       proton_pT_min_(proton_pT_min),
@@ -570,6 +595,8 @@ class FlowBasic {
   const double Ekin_;
   // center-of-mass frame beam rapidity
   const double y_beam_;
+  // center-of-mass frame beam velocity
+  const double v_beam_;
   ////////////////////////////////////////////////////////////////////////////////////////
   // Time evolution of flow:
   // whether to calculate flow only at the final time step
@@ -587,7 +614,18 @@ class FlowBasic {
   const double y_max_;
   // considered midrapidity range (used to calculate flow integrated at midrapidity)
   const double y_mid_min_;
-  const double y_mid_max_;  
+  const double y_mid_max_;
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Multiplicity cuts:
+  const std::unordered_set<int> centrality_excluded_species_;
+  const Centrality centrality_;
+  const bool apply_centrality_cut_;
+  // whether the multiplicity is computed in the FXT frame
+  const bool FXT_frame_;
+  // considered rapidity range
+  const Range<double> eta_;
+  // considered transverse momentum pT range
+  const Range<double> pT_;
   ////////////////////////////////////////////////////////////////////////////////////////
   // Transverse momentum pT cuts:
   const double proton_pT_min_;

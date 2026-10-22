@@ -271,6 +271,34 @@ void Config::load(const std::string& config_filename) {
   if (cfg.count("Flow_y_mid_max")) {
     flow_y_mid_max = std::stod(cfg["Flow_y_mid_max"]);
   }
+  // Centrality cuts
+  const int n_centrality_keys = cfg.count("Flow_centrality_percentage_min") +
+    cfg.count("Flow_centrality_percentage_max") +
+    cfg.count("Flow_centrality_Ncharged_min") +
+    cfg.count("Flow_centrality_Ncharged_max");
+  if (n_centrality_keys != 0 && n_centrality_keys != 4) {
+    throw std::runtime_error(
+      "All four Flow_centrality parameters must be provided together.");
+  }
+  if (n_centrality_keys == 4) {
+    flow_centrality_percentage_min = std::stod(cfg["Flow_centrality_percentage_min"]);
+    flow_centrality_percentage_max = std::stod(cfg["Flow_centrality_percentage_max"]);
+    flow_centrality_Ncharged_min = std::stoi(cfg["Flow_centrality_Ncharged_min"]);
+    flow_centrality_Ncharged_max = std::stoi(cfg["Flow_centrality_Ncharged_max"]);
+    if (flow_centrality_percentage_min < 0.0 ||
+	flow_centrality_percentage_max > 100.0 ||
+	flow_centrality_percentage_min >= flow_centrality_percentage_max) {
+      throw std::invalid_argument("Invalid Flow_centrality percentage range.");
+    }
+    if (flow_centrality_Ncharged_min < 0 ||
+	flow_centrality_Ncharged_min > flow_centrality_Ncharged_max) {
+      throw std::invalid_argument("Invalid Flow_centrality multiplicity range.");
+    }
+  }
+  if (cfg.count("Flow_centrality_excluded_species")) {
+    flow_centrality_excluded_species =
+      to_unordered_set_of_ints(cfg["Flow_centrality_excluded_species"]);
+  }
   // Default pT cuts
   if (cfg.count("Flow_default_pT_cuts_HADES")) {
     flow_default_pT_cuts_HADES = to_bool(cfg["Flow_default_pT_cuts_HADES"]);

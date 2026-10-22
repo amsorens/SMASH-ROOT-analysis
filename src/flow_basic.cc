@@ -22,6 +22,7 @@
 
 #include "./constants.h"
 #include "./basic_functions.h"
+#include "./fourvector.h"
 #include "./plots.h"
 #include "./read_Particles.h"
 #include "./SMASH_config_info.h"
@@ -211,7 +212,15 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   } else if ( particle_name == "kaon_minus" ) {
     particle_pT_min = kaon_pT_min_;
     particle_pT_max = kaon_pT_max_;
-  } 
+  }
+
+  // Read off whether cut on centrality is used and construct the corresponding info
+  char centrality_cut_info[Char_Array_Size] = "";
+  if (apply_centrality_cut_) {
+    snprintf(centrality_cut_info, Char_Array_Size, "centrality_%.0f-%.0f_",
+	     std::round(centrality_.percentage_min()),
+	     std::round(centrality_.percentage_max()));
+  }
 
   // Read off whether flow data is scaled by rapidity
   char scale_by_ybeam_info[Char_Array_Size];
@@ -251,12 +260,12 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v1[Char_Array_Size];
   snprintf(basic_file_name_v1, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v1->GetName(),
-	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
-	   scale_by_ybeam_info);
+	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range,
+	   centrality_cut_info, n_events, time, scale_by_ybeam_info);
 
   // Create canvas 
   TCanvas *canvas_v1 = new TCanvas("canvas_v1", basic_file_name_v1, 1200, 1200);
@@ -315,18 +324,18 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v2[Char_Array_Size];
   snprintf(basic_file_name_v2, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v2->GetName(),
-	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
-	   scale_by_ybeam_info);
+	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range,
+	   centrality_cut_info, n_events, time, scale_by_ybeam_info);
 
   // Create canvas 
   TCanvas *canvas_v2 = new TCanvas("canvas_v2", basic_file_name_v2, 1200, 1200);
   set_canvas_properties(canvas_v2);
 
-  // Graph v1
+  // Graph v2
   p_v2->SetLineColor(2);
   p_v2->SetMarkerStyle(8);
   if (user_axes_ranges_) {
@@ -379,12 +388,12 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v3[Char_Array_Size];
   snprintf(basic_file_name_v3, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_nEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v3->GetName(),
-	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range, n_events, time,
-	   scale_by_ybeam_info);
+	   particle_pT_min, particle_pT_max, -fitting_range, fitting_range,
+	   centrality_cut_info, n_events, time, scale_by_ybeam_info);
 
   // Create canvas 
   TCanvas *canvas_v3 = new TCanvas("canvas_v3", basic_file_name_v3, 1200, 1200);
@@ -569,6 +578,9 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   data_y_max << fitting_range;
   Fit_data_local_file_name += data_y_max.str();
 
+  // Add info on centrality cut
+  Fit_data_local_file_name += centrality_cut_info;
+  
   // Read off number of events
   Fit_data_local_file_name += "_nEvents=";
   std::stringstream data_nEvents;
@@ -680,31 +692,43 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   }
 
   // Write relevant info into the file
+  // Read off whether cut on centrality is used and construct the corresponding info
+  char centrality_cut_info_header[Char_Array_Size] = "";
+  if (apply_centrality_cut_) {
+    snprintf(centrality_cut_info_header, Char_Array_Size, "centrality cut%.0f-%.0f, ",
+	     std::round(centrality_.percentage_min()),
+	     std::round(centrality_.percentage_max()));
+  }
   if ( particle_name == "proton" ) {
     std::fprintf(Fit_data_global,
-		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, "
+		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, %s"
 		 "time = %.1f \n",
-		 proton_pT_min_, proton_pT_max_, impact_parameter_range_or_value, time);
+		 proton_pT_min_, proton_pT_max_, impact_parameter_range_or_value,
+		 centrality_cut_info_header, time);
   } else if ( particle_name == "deuteron" ) {
     std::fprintf(Fit_data_global,
-		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, "
+		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, %s"
 		 "time = %.1f \n",
-		 deuteron_pT_min_, deuteron_pT_max_, impact_parameter_range_or_value, time);
+		 deuteron_pT_min_, deuteron_pT_max_, impact_parameter_range_or_value,
+		 centrality_cut_info_header, time);
   } else if ( particle_name == "lambda" ) {
     std::fprintf(Fit_data_global,
-		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, "
+		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, %s"
 		 "time = %.1f \n",
-		 lambda_pT_min_, lambda_pT_max_, impact_parameter_range_or_value, time);
+		 lambda_pT_min_, lambda_pT_max_, impact_parameter_range_or_value,
+		 centrality_cut_info_header, time);
   } else if ( (particle_name == "pi_plus") || (particle_name == "pi_minus") ) {
     std::fprintf(Fit_data_global,
-		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, "
+		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, %s"
 		 "time = %.1f \n",
-		 pion_pT_min_, pion_pT_max_, impact_parameter_range_or_value, time);
+		 pion_pT_min_, pion_pT_max_, impact_parameter_range_or_value,
+		 centrality_cut_info_header, time);
   }  else if ( (particle_name == "kaon_plus") || (particle_name == "kaon_minus") ) {
     std::fprintf(Fit_data_global,
-		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, "
+		 "#\n#\n#pT_min = %4.2f, pT_max = %4.2f, impact parameter range = %s, %s"
 		 "time = %.1f \n",
-		 kaon_pT_min_, kaon_pT_max_, impact_parameter_range_or_value, time);
+		 kaon_pT_min_, kaon_pT_max_, impact_parameter_range_or_value,
+		 centrality_cut_info_header, time);
   }
     
   std::fprintf(Fit_data_global,
@@ -774,6 +798,18 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Identify the directory
   char Flow_data_directory[Char_Array_Size];
   snprintf(Flow_data_directory, Char_Array_Size, "%s", Target_Directory);
+  // Read off whether cut on centrality is used and construct the corresponding info
+  char centrality_cut_info[Char_Array_Size] = "";
+  char centrality_cut_info_header[Char_Array_Size] = "";
+  if (apply_centrality_cut_) {
+    snprintf(centrality_cut_info, Char_Array_Size, "centrality_%.0f-%.0f_",
+	     std::round(centrality_.percentage_min()),
+	     std::round(centrality_.percentage_max()));
+    snprintf(centrality_cut_info_header, Char_Array_Size,
+	     "# centrality cut %.0f-%.0f \n",
+	     std::round(centrality_.percentage_min()),
+	     std::round(centrality_.percentage_max()));
+  }  
   // Read off whether flow data is scaled by rapidity
   char scale_by_ybeam_info[Char_Array_Size];
   if ( scale_by_beam_rapidity_ ) {
@@ -787,15 +823,17 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Proton flow only
   char Flow_data_proton_file_name[Char_Array_Size];
   snprintf(Flow_data_proton_file_name, Char_Array_Size,
-	   "%s00_flow_basic_proton_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
-	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+	   "%s00_flow_basic_proton_data_sqrts=%.2f_%snEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, centrality_cut_info,
+	   n_events, time, scale_by_ybeam_info);
   FILE *Flow_data_proton;
   Flow_data_proton = fopen(Flow_data_proton_file_name, "w");
   // Add header
   std::fprintf(Flow_data_proton, "# Flow data                \n#\n"
-	       "# impact parameter range = %s fm \n"
+	       "# impact parameter range = %s fm \n%s"
 	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n#\n",
-	       impact_parameter_range_or_value, proton_pT_min_, proton_pT_max_);
+	       impact_parameter_range_or_value, centrality_cut_info_header,
+	       proton_pT_min_, proton_pT_max_);
   // Add column labels
   std::fprintf(Flow_data_proton, "# y          "
 	       "v1 p        +-          v2 p        +-          v3 p        +-          "
@@ -805,17 +843,18 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Abbreviated: only non-strange particles (4 species)
   char Flow_data_nonstrange_file_name[Char_Array_Size];
   snprintf(Flow_data_nonstrange_file_name, Char_Array_Size,
-	   "%s00_flow_basic_nonstrange_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
-	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+	   "%s00_flow_basic_nonstrange_data_sqrts=%.2f_%snEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, centrality_cut_info,
+	   n_events, time, scale_by_ybeam_info);
   FILE *Flow_data_nonstrange;
   Flow_data_nonstrange = fopen(Flow_data_nonstrange_file_name, "w");
   // Add header
   std::fprintf(Flow_data_nonstrange, "# Flow data                \n#\n"
-	       "# impact parameter range = %s fm \n"
+	       "# impact parameter range = %s fm \n%s"
 	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n"
 	       "# deuteron pTmin = %3.2f, pTmax = %3.2f \n"
 	       "#     pion pTmin = %3.2f, pTmax = %3.2f \n#\n",
-	       impact_parameter_range_or_value,
+	       impact_parameter_range_or_value, centrality_cut_info_header,
 	       proton_pT_min_, proton_pT_max_, deuteron_pT_min_, deuteron_pT_max_,
 	       pion_pT_min_, pion_pT_max_);
   // Add column labels
@@ -830,19 +869,20 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Full info (7 species)
   char Flow_data_full_file_name[Char_Array_Size];
   snprintf(Flow_data_full_file_name, Char_Array_Size,
-	   "%s00_flow_basic_all_data_sqrts=%.2f_nEvents=%d_t=%.1f_fm_%s.txt",
-	   Flow_data_directory, sqrts_, n_events, time, scale_by_ybeam_info);
+	   "%s00_flow_basic_all_data_sqrts=%.2f_%snEvents=%d_t=%.1f_fm_%s.txt",
+	   Flow_data_directory, sqrts_, centrality_cut_info,
+	   n_events, time, scale_by_ybeam_info);
   FILE *Flow_data_full;
   Flow_data_full = fopen(Flow_data_full_file_name, "w");
   // Add header
   std::fprintf(Flow_data_full, "# Flow data                \n#\n"
-	       "# impact parameter range = %s fm \n"
+	       "# impact parameter range = %s fm \n%s"
 	       "#   proton pTmin = %3.2f, pTmax = %3.2f \n"
 	       "# deuteron pTmin = %3.2f, pTmax = %3.2f \n"
 	       "#   Lambda pTmin = %3.2f, pTmax = %3.2f \n"
 	       "#     pion pTmin = %3.2f, pTmax = %3.2f \n"
 	       "#     kaon pTmin = %3.2f, pTmax = %3.2f \n#\n",
-	       impact_parameter_range_or_value,
+	       impact_parameter_range_or_value, centrality_cut_info_header,
 	       proton_pT_min_, proton_pT_max_, deuteron_pT_min_, deuteron_pT_max_,
 	       lambda_pT_min_, lambda_pT_max_, pion_pT_min_, pion_pT_max_,
 	       kaon_pT_min_, kaon_pT_max_);
@@ -1405,6 +1445,7 @@ void FlowBasic::basic_flow
   ROOT_file->fChain->SetBranchStatus("current_t", 1);
   ROOT_file->fChain->SetBranchStatus("npart", 1);
   ROOT_file->fChain->SetBranchStatus("pdgcode", 1);
+  ROOT_file->fChain->SetBranchStatus("charge", 1);
   ROOT_file->fChain->SetBranchStatus("p0", 1);
   ROOT_file->fChain->SetBranchStatus("px", 1);
   ROOT_file->fChain->SetBranchStatus("py", 1);
@@ -1433,6 +1474,9 @@ void FlowBasic::basic_flow
 
   const int entries_per_event =
     ROOT_file->n_event_time_steps() * ROOT_file->n_ensembles();
+
+  // Variable to count the number of events that survive the cuts
+  int n_used_events = 0;  
   
   for (int i_tree_entry = 0; i_tree_entry < ROOT_file->n_entries(); i_tree_entry++) {
     // Print out a message every X entries
@@ -1473,6 +1517,77 @@ void FlowBasic::basic_flow
     /////////////////////////////////////////
     // Get info on time from the tree
     const double time = ROOT_file->t[0];
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    // If centality selection is applied, cut on events according to the multiplicity
+    // defining the centrality class
+    bool fails_multiplicity_cuts = false;
+    if (apply_centrality_cut_) {
+      // Centrality selection only works without ensembles
+      if (config_info.Ensembles() > 1) {
+	throw std::runtime_error("Multiplicity cuts in flow analysis work only for "
+				 "Nensembles = 1.");
+      }
+      
+      // Variable to count the number of charged particles at midrapity
+      int n_charged = 0;
+
+      /////////////////////////////////////////
+      // A loop over all particles in the entry
+      for (int index = 0; index < ROOT_file->npart; index++) {
+	// Skip excluded particles
+	if (centrality_excluded_species_.count(ROOT_file->pdgcode[index])) {
+	  continue;
+	}
+      
+	// Get the particle four-momentum in the collider frame.
+	// TO DO: this assumes the collider frame in the output; in principle, SMASH can be
+	// run in the FXT frame, which should be taken into account here.
+	FourVector p_mu(ROOT_file->p0[index], ROOT_file->px[index],
+			ROOT_file->py[index], ROOT_file->pz[index]);
+	if (FXT_frame_) {
+	  // Boost to the fixed-target frame
+	  p_mu.boost_fourvector(0.0, 0.0, -v_beam_);
+	}
+      
+	// Calculate pseudorapidity
+	double eta = pseudorapidity(p_mu.x1(), p_mu.x2(), p_mu.x3());
+	// Apply the pseudorapidity cut
+	if ( eta < eta_.max() ) {
+	  if ( eta > eta_.min() ) {
+	    // Apply the pT cut
+	    double pT = transverse_momentum(p_mu.x1(), p_mu.x2());
+	    if ( pT > pT_.min() ) {
+	      if ( pT < pT_.max() ) {
+		// Only count charged particles
+		if ( std::abs(ROOT_file->charge[index]) > 0 ) {
+		  n_charged++;
+		}
+	      }
+	    } // pT cut
+	  }
+	} // eta cut
+      } // for (int index = 0; index < npart; index++) {
+    
+      /////////////////////////////////////////////
+      // Apply the cut on multiplicity
+      if ( n_charged < centrality_.Ncharged_min() ) {
+	fails_multiplicity_cuts = true;
+      }
+      if ( n_charged > centrality_.Ncharged_max() ) {
+	fails_multiplicity_cuts = true;
+      }
+    }
+
+    // Continue to the next event if the multiplicity cut discards the current event
+    if (fails_multiplicity_cuts) {
+      continue;
+    }
+
+    // If we're here, the event survives multiplicity cuts
+    n_used_events++;
 
     
     
@@ -1755,29 +1870,29 @@ void FlowBasic::basic_flow
     // protons:
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_[i], p_v2_proton_basic_[i], p_v3_proton_basic_[i],
-       ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
+       n_used_events, config_info.Range_or_Value(), ROOT_file->time_steps()[i],
        cfg, true);
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_integrated_in_4pi_[i],
        p_v2_proton_basic_integrated_in_4pi_[i],
        p_v3_proton_basic_integrated_in_4pi_[i],
-       ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
+       n_used_events, config_info.Range_or_Value(), ROOT_file->time_steps()[i],
        cfg, true);
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_proton_basic_integrated_at_mid_y_[i],
        p_v2_proton_basic_integrated_at_mid_y_[i],
        p_v3_proton_basic_integrated_at_mid_y_[i],
-       ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
+       n_used_events, config_info.Range_or_Value(), ROOT_file->time_steps()[i],
        cfg, true);
     // pi pluses:
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_pi_plus_basic_[i], p_v2_pi_plus_basic_[i], p_v3_pi_plus_basic_[i],
-       ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
+       n_used_events, config_info.Range_or_Value(), ROOT_file->time_steps()[i],
        cfg, true);
     // pi minuses:
     fit_v1_v2_v3_make_plots_save_fit_data
       (p_v1_pi_minus_basic_[i], p_v2_pi_minus_basic_[i], p_v3_pi_minus_basic_[i],
-       ROOT_file->n_events(), config_info.Range_or_Value(), ROOT_file->time_steps()[i],
+       n_used_events, config_info.Range_or_Value(), ROOT_file->time_steps()[i],
        cfg, true);
   }
 
@@ -1804,7 +1919,7 @@ void FlowBasic::basic_flow
        p_v3_proton_basic_[i], p_v3_deuteron_basic_[i], p_v3_lambda_basic_[i],
        p_v3_pi_plus_basic_[i], p_v3_pi_minus_basic_[i], p_v3_kaon_plus_basic_[i],
        p_v3_kaon_minus_basic_[i],
-       ROOT_file->n_events(),
+       n_used_events,
        config_info.Range_or_Value(),
        ROOT_file->time_steps()[i]);
   }   
@@ -1814,12 +1929,12 @@ void FlowBasic::basic_flow
   ///////////////////////////////////////////
   // Print and save yield data
   const int real_event_equivalent =
-    ROOT_file->n_events() * ROOT_file->n_test() * ROOT_file->n_ensembles();
+    n_used_events * ROOT_file->n_test() * ROOT_file->n_ensembles();
 
   save_yield_data(proton_count, deuteron_count, lambda_count,
 		  pi_plus_count, pi_minus_count, kaon_plus_count, kaon_minus_count,   
 		  ROOT_file->current_t_steps(), output_times,
-		  p_v1_proton_basic_[0], ROOT_file->n_events(), real_event_equivalent,
+		  p_v1_proton_basic_[0], n_used_events, real_event_equivalent,
 		  cfg);
   
 

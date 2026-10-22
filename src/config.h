@@ -15,6 +15,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "./centrality.h"
 #include "./constants.h"
 
 
@@ -90,6 +91,12 @@ struct Config {
   // Coverage for quantities integrated at midrapidity:
   double flow_y_mid_min = -0.25;
   double flow_y_mid_max = 0.25;
+  // Multiplicity cuts:
+  std::unordered_set<int> flow_centrality_excluded_species{};
+  double flow_centrality_percentage_min{};
+  double flow_centrality_percentage_max{};
+  int flow_centrality_Ncharged_min{};
+  int flow_centrality_Ncharged_max{};
   // Transverse momentum pT cuts
   bool flow_default_pT_cuts_HADES = false;
   bool flow_default_pT_cuts_STAR_FXT = false;
