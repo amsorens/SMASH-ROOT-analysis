@@ -137,6 +137,9 @@ class FlowBasic {
 	    double kaon_pT_min,
 	    double kaon_pT_max,
 	    //////////////////////////////////////
+	    // Whether to unshift the reaction plane, default true for basic flow
+	    bool unshift_reaction_plane = true,
+	    //////////////////////////////////////
 	    // Plotting parameters:
 	    bool show_stats = false,
 	    bool user_axes_ranges = true,
@@ -192,6 +195,9 @@ class FlowBasic {
       pion_pT_max_(pion_pT_max),
       kaon_pT_min_(kaon_pT_min),
       kaon_pT_max_(kaon_pT_max),
+      ///////////////////////////////////////
+      // Unshift the reaction plane:
+      unshift_reaction_plane_(unshift_reaction_plane),
       ///////////////////////////////////////
       // Plotting parameters:
       user_axes_ranges_(user_axes_ranges),
@@ -638,6 +644,9 @@ class FlowBasic {
   const double pion_pT_max_;
   const double kaon_pT_min_;
   const double kaon_pT_max_;
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // Whether to unshift the reaction plane, default true for basic flow
+  const bool unshift_reaction_plane_;
   ////////////////////////////////////////////////////////////////////////////////////////
   // Parameters for plotting:
   const bool user_axes_ranges_;

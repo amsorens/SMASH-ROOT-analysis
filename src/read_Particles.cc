@@ -186,8 +186,15 @@ void ReadParticles::Init(TChain *tree) {
   fChain->SetBranchAddress("modus_l", &modus_l, &b_modus_l);
   fChain->SetBranchAddress("current_t", &current_t, &b_current_t);
   fChain->SetBranchAddress("impact_b", &impact_b, &b_impact_b);
+  // It's necessary to put a safeguard around the reaction_plane_angle branch which is
+  // a recent addition
+  if ( fChain->GetBranch("reaction_plane_angle") ) {
+    fChain->SetBranchAddress
+      ("reaction_plane_angle", &reaction_plane_angle, &b_reaction_plane_angle);
+    reaction_plane_angle_branch_exists = true;
+  }
   fChain->SetBranchAddress("empty_event", &empty_event, &b_empty_event);
-  // It's necessary to put a safeguard around the id branch which is non-standard
+  // It's necessary to put a safeguard around the id branch which is a recent addition
   if ( fChain->GetBranch("id") ) {
     fChain->SetBranchAddress("id", &id, &b_id);
     id_branch_exists = true;
@@ -195,7 +202,7 @@ void ReadParticles::Init(TChain *tree) {
   fChain->SetBranchAddress("pdgcode", pdgcode, &b_pdgcode);
   fChain->SetBranchAddress("charge", charge, &b_charge);
   // It's necessary to put safeguards around the formation_time and time_last_collision
-  // branches which are non-standard
+  // branches which are recent additions
   if ( fChain->GetBranch("formation_time") ) {
     fChain->SetBranchAddress("formation_time", formation_time, &b_formation_time);
     formation_time_branch_exists = true;

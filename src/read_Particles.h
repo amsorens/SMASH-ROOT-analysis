@@ -42,6 +42,7 @@ class ReadParticles {
   Double_t modus_l;
   Double_t current_t;
   Double_t impact_b;
+  Double_t reaction_plane_angle;
   Int_t empty_event;
   Int_t id[Max_Particles]; 
   Int_t pdgcode[Max_Particles];
@@ -72,6 +73,7 @@ class ReadParticles {
   TBranch* b_modus_l;
   TBranch* b_current_t;
   TBranch* b_impact_b;
+  TBranch* b_reaction_plane_angle;
   TBranch* b_empty_event;
   TBranch* b_id;
   TBranch* b_pdgcode;
@@ -92,6 +94,7 @@ class ReadParticles {
 
   ////////////////////////////////////////////////////////////////////////////////////////
   // Auxiliary variables to prevent accessing non-existing branches in older ROOT files
+  bool reaction_plane_angle_branch_exists{};
   bool id_branch_exists{};
   bool formation_time_branch_exists{};
   bool time_last_collision_branch_exists{};

@@ -217,7 +217,7 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Read off whether cut on centrality is used and construct the corresponding info
   char centrality_cut_info[Char_Array_Size] = "";
   if (apply_centrality_cut_) {
-    snprintf(centrality_cut_info, Char_Array_Size, "centrality_%.0f-%.0f_",
+    snprintf(centrality_cut_info, Char_Array_Size, "_centrality_%.0f-%.0f",
 	     std::round(centrality_.percentage_min()),
 	     std::round(centrality_.percentage_max()));
   }
@@ -260,7 +260,7 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v1[Char_Array_Size];
   snprintf(basic_file_name_v1, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f%s_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v1->GetName(),
@@ -324,7 +324,7 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v2[Char_Array_Size];
   snprintf(basic_file_name_v2, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f%s_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v2->GetName(),
@@ -388,7 +388,7 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Get the name for the plot and files
   char basic_file_name_v3[Char_Array_Size];
   snprintf(basic_file_name_v3, Char_Array_Size,
-	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f_%snEvents_%d_t_%.1f_fm_%s",
+	   "%s%s%s_pTmin_%3.1f_pTmax_%3.1f_ymin_%3.2f_ymax_%3.2f%s_nEvents_%d_t_%.1f_fm_%s",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? flow_directory_name_ : "",
 	   p_v3->GetName(),
@@ -1444,6 +1444,7 @@ void FlowBasic::basic_flow
   ROOT_file->fChain->SetBranchStatus("t", 1);
   ROOT_file->fChain->SetBranchStatus("current_t", 1);
   ROOT_file->fChain->SetBranchStatus("npart", 1);
+  ROOT_file->fChain->SetBranchStatus("reaction_plane_angle", 1);
   ROOT_file->fChain->SetBranchStatus("pdgcode", 1);
   ROOT_file->fChain->SetBranchStatus("charge", 1);
   ROOT_file->fChain->SetBranchStatus("p0", 1);
@@ -1589,6 +1590,8 @@ void FlowBasic::basic_flow
     // If we're here, the event survives multiplicity cuts
     n_used_events++;
 
+    // Get the reaction plane angle information
+    const double Psi_RP = ROOT_file->reaction_plane_angle;
     
     
     //////////////////////////////////////////////////////////////////////////////////////
@@ -1619,21 +1622,24 @@ void FlowBasic::basic_flow
 		      p_v1_proton_basic_[time_step_index],
 		      p_v2_proton_basic_[time_step_index],
 		      p_v3_proton_basic_[time_step_index],
-		      proton_pT_min_, proton_pT_max_);
+		      proton_pT_min_, proton_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	fill_integrated_v1_v2_v3
 	  (ROOT_file->p0[index],
 	   ROOT_file->px[index], ROOT_file->py[index], ROOT_file->pz[index],
 	   p_v1_proton_basic_integrated_in_4pi_[time_step_index],
 	   p_v2_proton_basic_integrated_in_4pi_[time_step_index],
 	   p_v3_proton_basic_integrated_in_4pi_[time_step_index],
-	   proton_pT_min_, proton_pT_max_);
+	   proton_pT_min_, proton_pT_max_,
+	   unshift_reaction_plane_ ? Psi_RP : 0.0);
 	fill_integrated_v1_v2_v3
 	  (ROOT_file->p0[index],
 	   ROOT_file->px[index], ROOT_file->py[index], ROOT_file->pz[index],
 	   p_v1_proton_basic_integrated_at_mid_y_[time_step_index],
 	   p_v2_proton_basic_integrated_at_mid_y_[time_step_index],
 	   p_v3_proton_basic_integrated_at_mid_y_[time_step_index],
-	   proton_pT_min_, proton_pT_max_);
+	   proton_pT_min_, proton_pT_max_,
+	   unshift_reaction_plane_ ? Psi_RP : 0.0);
 	
 	break;
       }
@@ -1652,7 +1658,8 @@ void FlowBasic::basic_flow
 		      p_v1_pi_minus_basic_[time_step_index],
 		      p_v2_pi_minus_basic_[time_step_index],
 		      p_v3_pi_minus_basic_[time_step_index],
-		      pion_pT_min_, pion_pT_max_);
+		      pion_pT_min_, pion_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	///////////////////////////////////////
@@ -1670,7 +1677,8 @@ void FlowBasic::basic_flow
 		      p_v1_pi_plus_basic_[time_step_index],
 		      p_v2_pi_plus_basic_[time_step_index],
 		      p_v3_pi_plus_basic_[time_step_index],
-		      pion_pT_min_, pion_pT_max_);
+		      pion_pT_min_, pion_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	///////////////////////////////////////
@@ -1689,7 +1697,8 @@ void FlowBasic::basic_flow
 		      p_v1_deuteron_basic_[time_step_index],
 		      p_v2_deuteron_basic_[time_step_index],
 		      p_v3_deuteron_basic_[time_step_index],
-		      deuteron_pT_min_, deuteron_pT_max_);
+		      deuteron_pT_min_, deuteron_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	///////////////////////////////////////
@@ -1708,7 +1717,8 @@ void FlowBasic::basic_flow
 		      p_v1_kaon_plus_basic_[time_step_index],
 		      p_v2_kaon_plus_basic_[time_step_index],
 		      p_v3_kaon_plus_basic_[time_step_index],
-		      kaon_pT_min_, kaon_pT_max_);
+		      kaon_pT_min_, kaon_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	///////////////////////////////////////
@@ -1727,7 +1737,8 @@ void FlowBasic::basic_flow
 		      p_v1_lambda_basic_[time_step_index],
 		      p_v2_lambda_basic_[time_step_index],
 		      p_v3_lambda_basic_[time_step_index],
-		      lambda_pT_min_, lambda_pT_max_);
+		      lambda_pT_min_, lambda_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	///////////////////////////////////////
@@ -1746,7 +1757,8 @@ void FlowBasic::basic_flow
 		      p_v1_kaon_minus_basic_[time_step_index],
 		      p_v2_kaon_minus_basic_[time_step_index],
 		      p_v3_kaon_minus_basic_[time_step_index],
-		      kaon_pT_min_, kaon_pT_max_);
+		      kaon_pT_min_, kaon_pT_max_,
+		      unshift_reaction_plane_ ? Psi_RP : 0.0);
 	break;
       }
 	
