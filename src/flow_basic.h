@@ -13,6 +13,7 @@
 #include <iostream>
 #include <memory>
 #include <set>
+#include <stdexcept>
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -26,6 +27,7 @@
 #include "./config.h"
 #include "./range.h"
 #include "./read_Particles.h"
+#include "./shared_helpers.h"
 #include "./SMASH_config_info.h"
 
 
@@ -112,18 +114,10 @@ class FlowBasic {
 	    double y_mid_min,
 	    double y_mid_max,
 	    //////////////////////////////////////
-	    // Multiplicity cuts:
-	    std::unordered_set<int> centrality_excluded_species,
-	    double centrality_percentage_min,
-	    double centrality_percentage_max,
-	    int centrality_Ncharged_min,
-	    int centrality_Ncharged_max,
-	    // NOTE: values from the multiplicity section of the config are reused here
-	    bool FXT_frame,
-	    double eta_min,
-	    double eta_max,
-	    double pT_min,
-	    double pT_max,
+	    // Centrality cuts:
+	    // std::optional handles the case where the centrality is empty
+	    std::optional<Centrality> centrality,
+	    MultiplicityCuts multiplicity_cuts,
 	    //////////////////////////////////////
 	    // Transverse momentum pT cuts:
 	    double proton_pT_min,
@@ -175,14 +169,9 @@ class FlowBasic {
       y_mid_min_(y_mid_min),
       y_mid_max_(y_mid_max),
       //////////////////////////////////////
-      // Multiplicity cuts:
-      centrality_excluded_species_(centrality_excluded_species),
-      centrality_(centrality_percentage_min, centrality_percentage_max,
-		  centrality_Ncharged_min, centrality_Ncharged_max),
-      apply_centrality_cut_(centrality_.Ncharged_max() > 0),
-      FXT_frame_(FXT_frame),
-      eta_(Range<double>(eta_min, eta_max)),
-      pT_(Range<double>(pT_min, pT_max)),
+      // Centrality cuts:
+      centrality_(centrality),
+      multiplicity_cuts_(multiplicity_cuts),
       ///////////////////////////////////////
       // pT cuts:      
       proton_pT_min_(proton_pT_min),
@@ -622,16 +611,10 @@ class FlowBasic {
   const double y_mid_min_;
   const double y_mid_max_;
   ////////////////////////////////////////////////////////////////////////////////////////
-  // Multiplicity cuts:
-  const std::unordered_set<int> centrality_excluded_species_;
-  const Centrality centrality_;
-  const bool apply_centrality_cut_;
-  // whether the multiplicity is computed in the FXT frame
-  const bool FXT_frame_;
-  // considered rapidity range
-  const Range<double> eta_;
-  // considered transverse momentum pT range
-  const Range<double> pT_;
+  // Centrality cuts:
+  // std::optional handles the case where the centrality is empty (not provided in config)
+  const std::optional<Centrality> centrality_;
+  const MultiplicityCuts multiplicity_cuts_;
   ////////////////////////////////////////////////////////////////////////////////////////
   // Transverse momentum pT cuts:
   const double proton_pT_min_;

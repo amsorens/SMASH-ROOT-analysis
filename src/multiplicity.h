@@ -23,6 +23,7 @@
 #include "./centrality.h"
 #include "./range.h"
 #include "./read_Particles.h"
+#include "./shared_helpers.h"
 #include "./SMASH_config_info.h"
 
 #include <iostream>
@@ -31,18 +32,11 @@
 class Multiplicity {
  public:
   ////////////////////////////////////////////////////////////////////////////////////////
-  // Default constructor, "implemented" here in the .h file
-  // We provide default values of the number of bins and spread in rapidity y for the
-  // TProfile histograms, as well as the default value of bool for displaying stats
+  // Constructor
   Multiplicity(double sqrts,
 	       int N_events,
-	       std::unordered_set<int> pdgs_to_exclude,
 	       std::vector<double> centrality_class_edges,
-	       bool FXT_frame,
-	       double eta_min,
-	       double eta_max,
-	       double pT_min,
-	       double pT_max)
+	       MultiplicityCuts multiplicity_cuts)
     // Explicit initialization of const members (terms are initialized in the order of
     // declaration in the class definition, regardless of the order of appearance here):
     : sqrts_(sqrts),
@@ -50,21 +44,16 @@ class Multiplicity {
       y_beam_( y_beam_cm(sqrts_) ),
       v_beam_( v_beam_cm(sqrts_) ),
       N_events_(N_events),
-      pdgs_to_exclude_(pdgs_to_exclude),
       centrality_class_edges_(centrality_class_edges),
-      n_of_centrality_classes_( centrality_class_edges.size() - 1 ),      
-      FXT_frame_(FXT_frame),
-      ///////////////////////////////////////
-      // Cuts:
-      eta_(Range<double>(eta_min, eta_max)),
-      pT_(Range<double>(pT_min, pT_max)) {
+      n_of_centrality_classes_( centrality_class_edges.size() - 1 ),
+      multiplicity_cuts_(multiplicity_cuts) {
     //////////////////////////////////////////////////////////////////////////////////////
     // Resize to the number of centrality classes
     h_impact_b_in_cent_classes_.resize(n_of_centrality_classes_);
   }
 
-  // Default destructor
-  virtual ~Multiplicity() {}
+  // Destructor
+  ~Multiplicity() = default;
 
 
   
@@ -114,20 +103,13 @@ class Multiplicity {
   const double v_beam_;
   // number of events
   const int N_events_;
-  // list of particle pdg codes to exclude from centrality analysis
-  const std::unordered_set<int> pdgs_to_exclude_;
   // edges of wanted centrality classes
   const std::vector<double> centrality_class_edges_;
   // number of centrality classes
   const int n_of_centrality_classes_;
-  // whether the multiplicity is computed in the FXT frame
-  const bool FXT_frame_;
-  ///////////////////////////////////////////
-  // Cuts:
-  // considered rapidity range
-  const Range<double> eta_;
-  // considered transverse momentum pT range
-  const Range<double> pT_;
+  // parameters of multiplicity analysis: pdg codes to exclude, whether to apply cuts in
+  // FXT frame, eta and pT cuts
+  MultiplicityCuts multiplicity_cuts_;
   ////////////////////////////////////////////////////////////////////////////////////////
   // Event characteristics:
   // number of non-empty events

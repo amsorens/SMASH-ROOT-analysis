@@ -48,6 +48,7 @@ set(SRC_FILES
 ./src/multiplicity.cc
 ./src/plots.cc
 ./src/read_Particles.cc
+./src/shared_helpers.cc
 ./src/SMASH_config_info.cc
 ./src/yields.cc
 )
@@ -64,6 +65,7 @@ set(HEADER_FILES
 ./src/plots.h
 ./src/range.h
 ./src/read_Particles.h
+./src/shared_helpers.h
 ./src/SMASH_config_info.h
 ./src/yields.h
 )

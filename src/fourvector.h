@@ -12,6 +12,8 @@
 #ifndef SMASH_ROOT_ANALYSIS_FOURVECTOR_H
 #define SMASH_ROOT_ANALYSIS_FOURVECTOR_H
 
+#include <iostream>
+
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>

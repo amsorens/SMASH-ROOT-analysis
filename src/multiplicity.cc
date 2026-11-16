@@ -24,6 +24,7 @@
 #include "./fourvector.h"
 #include "./plots.h"
 #include "./read_Particles.h"
+#include "./shared_helpers.h"
 #include "./SMASH_config_info.h"
 
 
@@ -64,8 +65,10 @@ void Multiplicity::plot_and_save_1D_histogram_wrapper
 	   "etamin=%3.2f_etamax=%3.2f_pTmin=%3.2f_pTmax=%3.2f_nEventsNonempty=%d",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? multiplicity_directory_name_ : "",
-	   h1->GetName(), FXT_frame_ ? "_FXT_frame" : "",
-	   eta_.min(), eta_.max(), pT_.min(), pT_.max(), N_events_nonempty_);
+	   h1->GetName(), multiplicity_cuts_.FXT_frame ? "_FXT_frame" : "",
+	   multiplicity_cuts_.eta.min(), multiplicity_cuts_.eta.max(),
+	   multiplicity_cuts_.pT.min(), multiplicity_cuts_.pT.max(),
+	   N_events_nonempty_);
   char file_name_h1_log[Char_Array_Size];
   snprintf(file_name_h1_log, Char_Array_Size,
 	   "%s_log_plot",
@@ -107,8 +110,10 @@ void Multiplicity::plot_and_save_2D_histogram_wrapper
 	   "etamin=%3.2f_etamax=%3.2f_pTmin=%3.2f_pTmax=%3.2f_nEventsNonempty=%d",
 	   Target_Directory,
 	   put_plots_in_separate_directory ? multiplicity_directory_name_ : "",
-	   h2.GetName(), FXT_frame_ ? "_FXT_frame" : "",
-	   eta_.min(), eta_.max(), pT_.min(), pT_.max(), N_events_nonempty_);
+	   h2.GetName(), multiplicity_cuts_.FXT_frame ? "_FXT_frame" : "",
+	   multiplicity_cuts_.eta.min(), multiplicity_cuts_.eta.max(),
+	   multiplicity_cuts_.pT.min(), multiplicity_cuts_.pT.max(),
+	   N_events_nonempty_);
   char file_name_h2_log[Char_Array_Size];
   snprintf(file_name_h2_log, Char_Array_Size,
 	   "%s_log_plot",
@@ -138,7 +143,7 @@ std::string Multiplicity::pdg_exclusion_string() const {
   std::ostringstream oss;
   oss << "{";
   bool first = true;
-  for (int pdg : pdgs_to_exclude_) {
+  for (int pdg : multiplicity_cuts_.pdgs_to_exclude) {
     if (!first) {
       oss << ", ";
     }
@@ -187,7 +192,7 @@ void Multiplicity::multiplicity_and_centrality
   // Print out parameters of the analysis
   std::cout << "\nWe exclude the following PDG codes (see SMASH particle list):"
 	    << std::endl;
-  for (const auto& pdg_code : pdgs_to_exclude_) {
+  for (const auto& pdg_code : multiplicity_cuts_.pdgs_to_exclude) {
     std::cout << pdg_code << std::endl;
   }
   std::cout << "\nWe want the following centrality classes:"
@@ -203,14 +208,14 @@ void Multiplicity::multiplicity_and_centrality
   }
   std::cout << std::endl;
 
-  if (FXT_frame_) {
+  if (multiplicity_cuts_.FXT_frame) {
     std::cout << "The analysis is performed in the FXT frame" << std::endl;
   }
   std::cout << "The following cuts are used:"
-	    << "\n eta_min = " << eta_.min()
-	    << "\n eta_max = " << eta_.max()
-	    << "\n  pT_min = " << pT_.min() << " GeV"
-	    << "\n  pT_max = " << pT_.max() << " GeV\n" << std::endl;
+	    << "\n eta_min = " << multiplicity_cuts_.eta.min()
+	    << "\n eta_max = " << multiplicity_cuts_.eta.max()
+	    << "\n  pT_min = " << multiplicity_cuts_.pT.min() << " GeV"
+	    << "\n  pT_max = " << multiplicity_cuts_.pT.max() << " GeV\n" << std::endl;
 
   const int progress_message_threshold = 1000;
   std::cout << "Print progress message every "
@@ -261,41 +266,15 @@ void Multiplicity::multiplicity_and_centrality
     int n_charged = 0;
     
     for (int index = 0; index < ROOT_file->npart; index++) { /// loop A2
-      // Skip excluded particles
-      if (pdgs_to_exclude_.count(ROOT_file->pdgcode[index])) {
-	continue;
-      }
-
       // Get the particle four-momentum in the collider frame.
       // TO DO: this assumes the collider frame in the output; in principle, SMASH can be
       // run in the FXT frame, which should be taken into account here.
       FourVector p_mu(ROOT_file->p0[index], ROOT_file->px[index],
 		      ROOT_file->py[index], ROOT_file->pz[index]);
-
-      if (FXT_frame_) {
-	// Boost to the fixed-target frame
-	p_mu.boost_fourvector(0.0, 0.0, -v_beam_);
+      if (passes_multiplicity_cuts(multiplicity_cuts_, ROOT_file->charge[index],
+				   ROOT_file->pdgcode[index], p_mu, v_beam_)) {
+	n_charged++;
       }
-           
-      // Calculate pseudorapidity
-      double eta = pseudorapidity(p_mu.x1(), p_mu.x2(), p_mu.x3());
-      // Apply the pseudorapidity cut
-      if ( eta < eta_.max() ) {
-	if ( eta > eta_.min() ) {
-
-	  // Apply the pT cut
-	  double pT = transverse_momentum(p_mu.x1(), p_mu.x2());
-	  if ( pT > pT_.min() ) {
-	    if ( pT < pT_.max() ) {
-
-	      // Only count charged particles
-	      if ( std::abs(ROOT_file->charge[index]) > 0 ) {
-		n_charged++;
-	      }
-	    }
-	  } // pT cut
-	}
-      } // eta cut
     } // for (int index = 0; index < npart; index++) { /// loop A2
     
     // Sum n_charged across ensembles
@@ -408,7 +387,7 @@ void Multiplicity::multiplicity_and_centrality
       // Populate centrality_classes_
       centrality_classes_.emplace_back
 	(Centrality(current_percentage_min, current_percentage_max,
-		    current_Ncharged_min, current_Ncharged_max));
+		    Ncharged_range {current_Ncharged_min, current_Ncharged_max}));
       
       // Check if we summed all events
       if ( fraction >= (1.0 - epsilon) ) {
@@ -441,8 +420,8 @@ void Multiplicity::multiplicity_and_centrality
     snprintf(hname, Char_Array_Size, "h_b_impact_%4.2f_%4.2f",
 	     centrality_classes_[i].percentage_min(),
 	     centrality_classes_[i].percentage_max());
-    project_onto_h_impact_b(centrality_classes_[i].Ncharged_min(),
-			    centrality_classes_[i].Ncharged_max(),
+    project_onto_h_impact_b(centrality_classes_[i].n_charged_min(),
+			    centrality_classes_[i].n_charged_max(),
 			    h_impact_b_in_cent_classes_[i], hname);
   }
 
@@ -522,8 +501,10 @@ void Multiplicity::multiplicity_and_centrality
 	   "%s%s%s_sqrts=%3.1f_etamin=%3.2f_etamax=%3.2f_pTmin=%3.2f_pTmax=%3.2f_"
 	   "nEventsNonempty=%d.txt",
 	   Target_Directory,
-	   "centrality_classes", FXT_frame_ ? "_FXT_frame" : "",
-	   sqrts_, eta_.min(), eta_.max(), pT_.min(), pT_.max(), N_events_nonempty_);
+	   "centrality_classes", multiplicity_cuts_.FXT_frame ? "_FXT_frame" : "",
+	   sqrts_, multiplicity_cuts_.eta.min(), multiplicity_cuts_.eta.max(),
+	   multiplicity_cuts_.pT.min(), multiplicity_cuts_.pT.max(),
+	   N_events_nonempty_);
 
   // Open the file
   FILE* cent_file = fopen(centrality_file_name, "w");
@@ -544,8 +525,9 @@ void Multiplicity::multiplicity_and_centrality
 	  "#        class  Nch_min Nch_max     <b>   b(5%%)  b(95%%) \n"
 	  "# \n",
 	  N_events_, sqrts_, config_info.Range_or_Value(),
-	  FXT_frame_ ? " (in the FXT frame)" : "",
-	  eta_.min(), eta_.max(), pT_.min(), pT_.max(),
+	  multiplicity_cuts_.FXT_frame ? " (in the FXT frame)" : "",
+	  multiplicity_cuts_.eta.min(), multiplicity_cuts_.eta.max(),
+	  multiplicity_cuts_.pT.min(), multiplicity_cuts_.pT.max(),
 	  pdg_exclusion_string().c_str(), N_events_nonempty_);
 
   // Add data
@@ -553,7 +535,8 @@ void Multiplicity::multiplicity_and_centrality
     fprintf(cent_file, "   %5.2f-%5.2f:   %5d   %5d   %5.2f   %5.1f   %5.1f  \n",
 	    centrality_classes_[i].percentage_min(),
 	    centrality_classes_[i].percentage_max(),
-	    centrality_classes_[i].Ncharged_min(), centrality_classes_[i].Ncharged_max(),
+	    centrality_classes_[i].n_charged_min(),
+	    centrality_classes_[i].n_charged_max(),
 	    centrality_classes_[i].impact_b_mean(),
 	    centrality_classes_[i].impact_b_5_percent(),
 	    centrality_classes_[i].impact_b_95_percent());

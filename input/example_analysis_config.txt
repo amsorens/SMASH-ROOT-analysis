@@ -7,7 +7,7 @@ Verbose: false
 #
 # Set the number of the starting directory and the number of directories to loop over
   Start_directory: 0
-  Number_of_directories: 1000
+  Number_of_directories: 5000
 
 
 
@@ -15,9 +15,10 @@ Verbose: false
 
 # Multiplicity:
 Multiplicity: false
-Multiplicity_excluded_species: 2212, -2212, 1000010020   # p, pbar, d
+# Exclude these for cumulant analyses:
+#Multiplicity_excluded_species: 2212, -2212, 1000010020   # p, pbar, d
 Multiplicity_FXT_frame: false
-Multiplicity_default_cuts: true
+Multiplicity_default_eta_and_pT_cuts: true
 
 
 # Yields:
@@ -34,8 +35,6 @@ Yields_phi_pT_min: 0.0
 Flow_basic: true
 Flow_only_at_final_output: true
 Flow_default_pT_cuts_STAR_FXT: true
-# If excluded species are not provided, all Ncharged are used
-Flow_centrality_percentage_min: 10
-Flow_centrality_percentage_max: 40
-Flow_centrality_Ncharged_min: 2040
-Flow_centrality_Ncharged_max: 9773
+Flow_centrality_percentage: [10, 40]
+Flow_centrality_Ncharged: [2040, 9773]
+#Flow_centrality_impact_b: [4.7, 9.3]

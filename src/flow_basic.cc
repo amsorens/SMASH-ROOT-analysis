@@ -216,10 +216,10 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
 
   // Read off whether cut on centrality is used and construct the corresponding info
   char centrality_cut_info[Char_Array_Size] = "";
-  if (apply_centrality_cut_) {
+  if (centrality_) {
     snprintf(centrality_cut_info, Char_Array_Size, "_centrality_%.0f-%.0f",
-	     std::round(centrality_.percentage_min()),
-	     std::round(centrality_.percentage_max()));
+	     std::round(centrality_->percentage_min()),
+	     std::round(centrality_->percentage_max()));
   }
 
   // Read off whether flow data is scaled by rapidity
@@ -694,10 +694,10 @@ void FlowBasic::fit_v1_v2_v3_make_plots_save_fit_data
   // Write relevant info into the file
   // Read off whether cut on centrality is used and construct the corresponding info
   char centrality_cut_info_header[Char_Array_Size] = "";
-  if (apply_centrality_cut_) {
+  if (centrality_) {
     snprintf(centrality_cut_info_header, Char_Array_Size, "centrality cut%.0f-%.0f, ",
-	     std::round(centrality_.percentage_min()),
-	     std::round(centrality_.percentage_max()));
+	     std::round(centrality_->percentage_min()),
+	     std::round(centrality_->percentage_max()));
   }
   if ( particle_name == "proton" ) {
     std::fprintf(Fit_data_global,
@@ -801,14 +801,27 @@ void FlowBasic::save_flow_vs_rapidity_data
   // Read off whether cut on centrality is used and construct the corresponding info
   char centrality_cut_info[Char_Array_Size] = "";
   char centrality_cut_info_header[Char_Array_Size] = "";
-  if (apply_centrality_cut_) {
-    snprintf(centrality_cut_info, Char_Array_Size, "centrality_%.0f-%.0f_",
-	     std::round(centrality_.percentage_min()),
-	     std::round(centrality_.percentage_max()));
+  if (centrality_) {
+    snprintf(centrality_cut_info, Char_Array_Size, "centrality_%.0f-%.0f_%s_",
+	     std::round(centrality_->percentage_min()),
+	     std::round(centrality_->percentage_max()),
+	     centrality_->selection() == Centrality::Selection::Ncharged ?
+	     "by_Ncharged" : "by_ImpactB");
+    char cut_specifics[Char_Array_Size] = "";
+    if (centrality_->selection() == Centrality::Selection::Ncharged) {
+      snprintf(cut_specifics, sizeof(cut_specifics),
+	       "Ncharged: [%d, %d]",
+	       centrality_->n_charged_min(), centrality_->n_charged_max());
+    } else if (centrality_->selection() == Centrality::Selection::ImpactB) {
+       snprintf(cut_specifics, sizeof(cut_specifics),
+	       "ImpactB: [%.2f, %.2f]",
+		centrality_->impact_b_min(), centrality_->impact_b_max());
+    }
     snprintf(centrality_cut_info_header, Char_Array_Size,
-	     "# centrality cut %.0f-%.0f \n",
-	     std::round(centrality_.percentage_min()),
-	     std::round(centrality_.percentage_max()));
+	     "# centrality cut %.0f-%.0f with %s\n",
+	     std::round(centrality_->percentage_min()),
+	     std::round(centrality_->percentage_max()),
+	     cut_specifics);
   }  
   // Read off whether flow data is scaled by rapidity
   char scale_by_ybeam_info[Char_Array_Size];
@@ -1443,8 +1456,11 @@ void FlowBasic::basic_flow
   // Enable needed ones:
   ROOT_file->fChain->SetBranchStatus("t", 1);
   ROOT_file->fChain->SetBranchStatus("current_t", 1);
+  ROOT_file->fChain->SetBranchStatus("impact_b", 1);
   ROOT_file->fChain->SetBranchStatus("npart", 1);
-  ROOT_file->fChain->SetBranchStatus("reaction_plane_angle", 1);
+  if (ROOT_file->reaction_plane_angle_branch_exists) {
+    ROOT_file->fChain->SetBranchStatus("reaction_plane_angle", 1);
+  }
   ROOT_file->fChain->SetBranchStatus("pdgcode", 1);
   ROOT_file->fChain->SetBranchStatus("charge", 1);
   ROOT_file->fChain->SetBranchStatus("p0", 1);
@@ -1522,76 +1538,53 @@ void FlowBasic::basic_flow
 
 
     //////////////////////////////////////////////////////////////////////////////////////
-    // If centality selection is applied, cut on events according to the multiplicity
-    // defining the centrality class
-    bool fails_multiplicity_cuts = false;
-    if (apply_centrality_cut_) {
-      // Centrality selection only works without ensembles
-      if (config_info.Ensembles() > 1) {
-	throw std::runtime_error("Multiplicity cuts in flow analysis work only for "
-				 "Nensembles = 1.");
-      }
-      
-      // Variable to count the number of charged particles at midrapity
+    // If a centality selection is applied, cut events outside the centrality class,
+    // selecting either on multiplicity or on impact parameter:
+    // Only true if centrality_ is non-empty
+    if (centrality_) {
+      // Variable to count the number of charged particles within acceptance, in case of
+      // multiplicity-based centrality cut
       int n_charged = 0;
 
-      /////////////////////////////////////////
-      // A loop over all particles in the entry
-      for (int index = 0; index < ROOT_file->npart; index++) {
-	// Skip excluded particles
-	if (centrality_excluded_species_.count(ROOT_file->pdgcode[index])) {
-	  continue;
+      // Multiplcity-based selection needs counting n_charged
+      if (centrality_->selection() == Centrality::Selection::Ncharged) {
+	// Multiplicity-based selection only works without ensembles
+	if (config_info.Ensembles() > 1) {
+	  throw std::runtime_error("Multiplicity cuts in flow analysis work only for "
+				   "Nensembles = 1.");
 	}
       
-	// Get the particle four-momentum in the collider frame.
-	// TO DO: this assumes the collider frame in the output; in principle, SMASH can be
-	// run in the FXT frame, which should be taken into account here.
-	FourVector p_mu(ROOT_file->p0[index], ROOT_file->px[index],
-			ROOT_file->py[index], ROOT_file->pz[index]);
-	if (FXT_frame_) {
-	  // Boost to the fixed-target frame
-	  p_mu.boost_fourvector(0.0, 0.0, -v_beam_);
-	}
-      
-	// Calculate pseudorapidity
-	double eta = pseudorapidity(p_mu.x1(), p_mu.x2(), p_mu.x3());
-	// Apply the pseudorapidity cut
-	if ( eta < eta_.max() ) {
-	  if ( eta > eta_.min() ) {
-	    // Apply the pT cut
-	    double pT = transverse_momentum(p_mu.x1(), p_mu.x2());
-	    if ( pT > pT_.min() ) {
-	      if ( pT < pT_.max() ) {
-		// Only count charged particles
-		if ( std::abs(ROOT_file->charge[index]) > 0 ) {
-		  n_charged++;
-		}
-	      }
-	    } // pT cut
+	/////////////////////////////////////////
+	// A loop over all particles in the entry
+	for (int index = 0; index < ROOT_file->npart; index++) {
+	  // Get the particle four-momentum in the collider frame.
+	  // TO DO: this assumes the collider frame in the output; in principle, SMASH
+	  // can be run in the FXT frame, which should be taken into account here.
+	  FourVector p_mu(ROOT_file->p0[index], ROOT_file->px[index],
+			  ROOT_file->py[index], ROOT_file->pz[index]);
+	  if (passes_multiplicity_cuts(multiplicity_cuts_, ROOT_file->charge[index],
+				       ROOT_file->pdgcode[index], p_mu, v_beam_)) {
+	    n_charged++;
 	  }
-	} // eta cut
-      } // for (int index = 0; index < npart; index++) {
-    
-      /////////////////////////////////////////////
-      // Apply the cut on multiplicity
-      if ( n_charged < centrality_.Ncharged_min() ) {
-	fails_multiplicity_cuts = true;
-      }
-      if ( n_charged > centrality_.Ncharged_max() ) {
-	fails_multiplicity_cuts = true;
+	} // for (int index = 0; index < npart; index++) {
+      } // if (centrality_->selection() == Centrality::Selection::Ncharged
+
+      // Skip this event if fails centrality cut; uses n_charged or the event's impact
+      // parameter, depending on the selection type
+      if (!centrality_->passes_centrality_cut(ROOT_file->impact_b, n_charged)) {
+	continue;
       }
     }
 
-    // Continue to the next event if the multiplicity cut discards the current event
-    if (fails_multiplicity_cuts) {
-      continue;
-    }
-
-    // If we're here, the event survives multiplicity cuts
+    // If we're here, the event survives centrality cuts
     n_used_events++;
 
+
+
     // Get the reaction plane angle information
-    const double Psi_RP = ROOT_file->reaction_plane_angle;
+    const double Psi_RP = ROOT_file->reaction_plane_angle_branch_exists ?
+      ROOT_file->reaction_plane_angle : 0.0;
+
     
     
     //////////////////////////////////////////////////////////////////////////////////////

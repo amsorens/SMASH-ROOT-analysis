@@ -10,6 +10,7 @@
 #ifndef SMASH_ROOT_ANALYSIS_CONFIG_H
 #define SMASH_ROOT_ANALYSIS_CONFIG_H
 
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -17,6 +18,7 @@
 
 #include "./centrality.h"
 #include "./constants.h"
+#include "./shared_helpers.h"
 
 
 
@@ -38,27 +40,19 @@ struct Config {
   // Multiplicity
   bool multiplicity = false; 
   // multiplicity analysis parameters
-  std::unordered_set<int> multiplicity_excluded_species{};
-  bool multiplicity_FXT_frame = false;
-  bool multiplicity_default_cuts = false;
-  double multiplicity_eta_min{};
-  double multiplicity_eta_max{};
-  double multiplicity_pT_min{};
-  double multiplicity_pT_max{};
+  bool multiplicity_default_eta_and_pT_cuts = false;
+  MultiplicityCuts multiplicity_cuts{};
   std::vector<double> centrality_class_edges =
     {0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00};
 
-  void default_multiplicity_cuts() {
-    if (multiplicity_FXT_frame) {
-      multiplicity_eta_min = Eta_Multiplicity_FXT_Min;
-      multiplicity_eta_max = Eta_Multiplicity_FXT_Max;
+  void default_multiplicity_eta_and_pT_cuts() {
+    if (multiplicity_cuts.FXT_frame) {
+      multiplicity_cuts.eta = {Eta_Multiplicity_FXT_Min, Eta_Multiplicity_FXT_Max};
     } else {
-      multiplicity_eta_min = Eta_Multiplicity_Min;
-      multiplicity_eta_max = Eta_Multiplicity_Max;
+      multiplicity_cuts.eta = {Eta_Multiplicity_Min, Eta_Multiplicity_Max};
     }
 
-    multiplicity_pT_min = PT_Multiplicity_Min;
-    multiplicity_pT_max = PT_Multiplicity_Max;
+    multiplicity_cuts.pT = {PT_Multiplicity_Min, PT_Multiplicity_Max};
   }
   
   
@@ -91,12 +85,9 @@ struct Config {
   // Coverage for quantities integrated at midrapidity:
   double flow_y_mid_min = -0.25;
   double flow_y_mid_max = 0.25;
-  // Multiplicity cuts:
-  std::unordered_set<int> flow_centrality_excluded_species{};
-  double flow_centrality_percentage_min{};
-  double flow_centrality_percentage_max{};
-  int flow_centrality_Ncharged_min{};
-  int flow_centrality_Ncharged_max{};
+  // Centrality cuts:
+  // std::optional ensures centrality is empty until filled
+  std::optional<Centrality> flow_centrality;
   // Transverse momentum pT cuts
   bool flow_default_pT_cuts_HADES = false;
   bool flow_default_pT_cuts_STAR_FXT = false;

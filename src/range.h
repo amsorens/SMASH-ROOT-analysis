@@ -28,7 +28,7 @@ class Range {
     max_ = max;
   }
   // Destructor
-  virtual ~Range() {}
+  ~Range() = default;
 
   ///////////////////////////////////////////
   // Member functions

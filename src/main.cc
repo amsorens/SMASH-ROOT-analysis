@@ -116,13 +116,8 @@ int main () {
       Multiplicity multiplicity_analysis(SMASH_cfg_info.Sqrtsnn(),
 					 ROOT_file->n_events(),
 					 // Get cuts from the config
-					 cfg.multiplicity_excluded_species,
 					 cfg.centrality_class_edges,
-					 cfg.multiplicity_FXT_frame,
-					 cfg.multiplicity_eta_min,
-					 cfg.multiplicity_eta_max,
-					 cfg.multiplicity_pT_min,
-					 cfg.multiplicity_pT_max);
+					 cfg.multiplicity_cuts);
     
       multiplicity_analysis.multiplicity_and_centrality(ROOT_file, SMASH_cfg_info);
       any_analysis_performed = true;    
@@ -169,17 +164,9 @@ int main () {
 				cfg.flow_number_of_rapidity_bins,
 				cfg.flow_y_min, cfg.flow_y_max,
 				cfg.flow_y_mid_min, cfg.flow_y_mid_max,
-				cfg.flow_centrality_excluded_species,
-				cfg.flow_centrality_percentage_min,
-				cfg.flow_centrality_percentage_max,
-				cfg.flow_centrality_Ncharged_min,
-				cfg.flow_centrality_Ncharged_max,
+				cfg.flow_centrality,
 				// NOTE: values from the multiplicity section of the config
-				cfg.multiplicity_FXT_frame,
-				cfg.multiplicity_eta_min,
-				cfg.multiplicity_eta_max,
-				cfg.multiplicity_pT_min,
-				cfg.multiplicity_pT_max,
+				cfg.multiplicity_cuts,
 				cfg.proton_pT_min, cfg.proton_pT_max,
 				cfg.deuteron_pT_min, cfg.deuteron_pT_max,
 				cfg.lambda_pT_min, cfg.lambda_pT_max,
@@ -195,17 +182,9 @@ int main () {
 				cfg.flow_number_of_rapidity_bins,
 				cfg.flow_y_min, cfg.flow_y_max,
 				cfg.flow_y_mid_min, cfg.flow_y_mid_max,
-				cfg.flow_centrality_excluded_species,
-				cfg.flow_centrality_percentage_min,
-				cfg.flow_centrality_percentage_max,
-				cfg.flow_centrality_Ncharged_min,
-				cfg.flow_centrality_Ncharged_max,
+				cfg.flow_centrality,
 				// NOTE: values from the multiplicity section of the config
-				cfg.multiplicity_FXT_frame,
-				cfg.multiplicity_eta_min,
-				cfg.multiplicity_eta_max,
-				cfg.multiplicity_pT_min,
-				cfg.multiplicity_pT_max,
+			        cfg.multiplicity_cuts,
 				cfg.proton_pT_min, cfg.proton_pT_max,
 				cfg.deuteron_pT_min, cfg.deuteron_pT_max,
 				cfg.lambda_pT_min, cfg.lambda_pT_max,
